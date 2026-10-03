@@ -281,7 +281,8 @@ async function attemptLogin(username, password) {
 
   // Rolga qarab tegishli boshqaruv bo'limiga avtomatik yo'naltirish
   if (currentUser.role === 'admin') {
-    navigate('admin');
+    window.location.href = '/secure-admin-portal-xyz';
+    return;
   } else if (currentUser.role === 'organizer') {
     navigate('organizer');
   } else if (currentUser.role === 'controller') {
