@@ -140,15 +140,49 @@ function navigateToView(viewName) {
     loadProfileView();
   }
 
+  // Update mobile bottom nav active tabs
+  const mobTabs = ["dashboard", "users", "activities", "profile"];
+  mobTabs.forEach(tab => {
+    const btn = document.getElementById(`adm-mob-${tab}`);
+    if (btn) {
+      if (tab === viewName) {
+        btn.classList.add("text-brand-400");
+        btn.classList.remove("text-slate-400");
+      } else {
+        btn.classList.remove("text-brand-400");
+        btn.classList.add("text-slate-400");
+      }
+    }
+  });
+
+  // Smooth scroll to top on mobile
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
   initLucide();
 }
 
 function toggleMobileSidebar() {
   const sidebar = document.getElementById("admin-sidebar");
+  const backdrop = document.getElementById("admin-sidebar-backdrop");
   if (sidebar) {
-    sidebar.classList.toggle("hidden");
+    sidebar.classList.toggle("-translate-x-full");
+    if (backdrop) {
+      backdrop.classList.toggle("hidden");
+    }
   }
 }
+
+function closeMobileSidebar() {
+  const sidebar = document.getElementById("admin-sidebar");
+  const backdrop = document.getElementById("admin-sidebar-backdrop");
+  if (sidebar && !sidebar.classList.contains("-translate-x-full")) {
+    sidebar.classList.add("-translate-x-full");
+  }
+  if (backdrop) {
+    backdrop.classList.add("hidden");
+  }
+}
+
 
 // ================= SESSION & AUTH VERIFICATION =================
 async function verifyAdminSession() {

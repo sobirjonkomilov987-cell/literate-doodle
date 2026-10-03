@@ -137,3 +137,24 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #334155;
 }
+
+/* Mobile Safe Area & Touch Enhancements */
+.safe-area-bottom {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+@media (max-width: 640px) {
+  .seat-item {
+    width: 36px;
+    height: 36px;
+    font-size: 0.65rem;
+    border-radius: 0.5rem;
+  }
+}
+
+/* Touch action optimization */
+button, a {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+

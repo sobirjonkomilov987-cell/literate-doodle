@@ -55,7 +55,7 @@ const rolePermissions = {
   admin: ["admin", "organizer", "controller", "events", "my-tickets"]
 };
 
-// Navigation between views
+// Navigation between views (Desktop & Mobile)
 function navigate(viewName) {
   const userRole = currentUser ? currentUser.role : "guest";
   const allowed = rolePermissions[userRole] || ["events"];
@@ -70,11 +70,25 @@ function navigate(viewName) {
   document.querySelectorAll(".view-panel").forEach(p => p.classList.add("hidden"));
   document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
 
+  // Mobile Bottom Nav update
+  document.querySelectorAll(".mobile-nav-btn").forEach(b => {
+    b.classList.remove("active", "text-indigo-400");
+    b.classList.add("text-slate-400");
+  });
+
   const targetView = document.getElementById(`view-${viewName}`);
   const targetNav = document.getElementById(`nav-${viewName}`);
+  const targetMobNav = document.getElementById(`mob-nav-${viewName}`);
 
   if (targetView) targetView.classList.remove("hidden");
   if (targetNav) targetNav.classList.add("active");
+  if (targetMobNav) {
+    targetMobNav.classList.add("active", "text-indigo-400");
+    targetMobNav.classList.remove("text-slate-400");
+  }
+
+  // Smooth scroll to top on mobile view switch
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 
   if (window.lucide) lucide.createIcons();
 
@@ -83,6 +97,15 @@ function navigate(viewName) {
   if (viewName === "organizer") loadOrganizerEvents();
   if (viewName === "admin") loadAdminUsers();
 }
+
+function toggleMobileDrawer() {
+  const drawer = document.getElementById("mobile-drawer");
+  if (drawer) {
+    drawer.classList.toggle("hidden");
+    if (window.lucide) lucide.createIcons();
+  }
+}
+
 
 // ================= AUTHENTICATION =================
 async function checkCurrentUser() {
@@ -124,6 +147,14 @@ function updateAuthUI(user) {
   if (navController) navController.classList.add("hidden");
   if (navAdmin) navAdmin.classList.add("hidden");
 
+  // Mobile Drawer elements
+  const drawerUserInfo = document.getElementById("drawer-user-info");
+  const drawerUsername = document.getElementById("drawer-username");
+  const drawerRoleBadge = document.getElementById("drawer-role-badge");
+  const drawerUserInitial = document.getElementById("drawer-user-initial");
+  const drawerAuthActions = document.getElementById("drawer-auth-actions");
+  const drawerLogoutBtn = document.getElementById("drawer-logout-btn");
+
   if (user) {
     profileWidget.classList.remove("hidden");
     profileWidget.classList.add("flex");
@@ -131,6 +162,14 @@ function updateAuthUI(user) {
 
     usernameEl.textContent = user.username;
     roleBadgeEl.textContent = `${user.role.toUpperCase()} ${user.organization_name ? `(${user.organization_name})` : ''}`;
+
+    // Update Mobile Drawer
+    if (drawerUserInfo) drawerUserInfo.classList.remove("hidden");
+    if (drawerUsername) drawerUsername.textContent = user.username;
+    if (drawerRoleBadge) drawerRoleBadge.textContent = user.role.toUpperCase();
+    if (drawerUserInitial) drawerUserInitial.textContent = (user.username || 'U')[0].toUpperCase();
+    if (drawerAuthActions) drawerAuthActions.classList.add("hidden");
+    if (drawerLogoutBtn) drawerLogoutBtn.classList.remove("hidden");
 
     // Faqat tegishli rolga mos tablarni ko'rsatish
     if (user.role === 'customer') {
@@ -154,6 +193,12 @@ function updateAuthUI(user) {
     profileWidget.classList.remove("flex");
     authButtons.classList.remove("hidden");
     currentUser = null;
+
+    // Reset Mobile Drawer
+    if (drawerUserInfo) drawerUserInfo.classList.add("hidden");
+    if (drawerAuthActions) drawerAuthActions.classList.remove("hidden");
+    if (drawerLogoutBtn) drawerLogoutBtn.classList.add("hidden");
+
     if (navEvents) navEvents.classList.remove("hidden");
   }
 }

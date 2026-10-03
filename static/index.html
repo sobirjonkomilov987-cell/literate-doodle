@@ -82,36 +82,112 @@
       </nav>
 
       <!-- AUTH / USER ACTIONS -->
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 sm:gap-3">
         <!-- ROLE BADGE & USER INFO -->
-        <div id="user-profile-widget" class="hidden items-center gap-3">
+        <div id="user-profile-widget" class="hidden items-center gap-2 sm:gap-3">
           <div class="text-right hidden sm:block">
             <div id="current-username" class="text-sm font-bold text-white">admin</div>
             <div id="current-role-badge" class="text-[11px] font-semibold text-indigo-400 uppercase tracking-wider">ADMIN</div>
           </div>
-          <button onclick="logout()" class="p-2.5 rounded-xl bg-slate-800/80 hover:bg-red-500/20 text-slate-400 hover:text-red-400 border border-slate-700 transition" title="Tizimdan chiqish">
-            <i data-lucide="log-out" class="w-5 h-5"></i>
+          <button onclick="logout()" class="p-2 sm:p-2.5 rounded-xl bg-slate-800/80 hover:bg-red-500/20 text-slate-400 hover:text-red-400 border border-slate-700 transition" title="Tizimdan chiqish">
+            <i data-lucide="log-out" class="w-4 h-4 sm:w-5 sm:h-5"></i>
           </button>
         </div>
 
-        <!-- LOGIN / REGISTER BUTTON -->
-        <div id="auth-buttons" class="flex items-center gap-2">
-          <a href="/admin" target="_blank" class="px-3 py-2 rounded-xl bg-indigo-950/80 hover:bg-indigo-900/80 text-indigo-300 border border-indigo-500/40 text-xs font-bold transition flex items-center gap-1.5 shadow">
+        <!-- LOGIN / REGISTER BUTTON (Desktop & Mobile) -->
+        <div id="auth-buttons" class="flex items-center gap-1.5 sm:gap-2">
+          <a href="/admin" target="_blank" class="hidden sm:flex px-3 py-2 rounded-xl bg-indigo-950/80 hover:bg-indigo-900/80 text-indigo-300 border border-indigo-500/40 text-xs font-bold transition items-center gap-1.5 shadow">
             <i data-lucide="shield" class="w-3.5 h-3.5 text-indigo-400"></i> Admin Portal
           </a>
-          <button onclick="openAuthModal('login')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm font-semibold text-white border border-slate-700 transition flex items-center gap-2">
-            <i data-lucide="log-in" class="w-4 h-4"></i> Kirish
+          <button onclick="openAuthModal('login')" class="px-3 sm:px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs sm:text-sm font-semibold text-white border border-slate-700 transition flex items-center gap-1.5">
+            <i data-lucide="log-in" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i> Kirish
           </button>
-          <button onclick="openAuthModal('register')" class="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition flex items-center gap-2">
+          <button onclick="openAuthModal('register')" class="hidden sm:flex px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition items-center gap-2">
             <i data-lucide="user-plus" class="w-4 h-4"></i> Ro'yxatdan o'tish
           </button>
         </div>
+
+        <!-- MOBILE HAMBURGER BUTTON -->
+        <button onclick="toggleMobileDrawer()" class="md:hidden p-2 rounded-xl bg-slate-800/80 text-slate-300 hover:text-white border border-slate-700 focus:outline-none" aria-label="Menyu">
+          <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
       </div>
     </div>
   </header>
 
+  <!-- MOBILE SLIDE-OUT DRAWER -->
+  <div id="mobile-drawer" class="fixed inset-0 z-50 hidden transition-all duration-300">
+    <div class="fixed inset-0 bg-black/75 backdrop-blur-sm" onclick="toggleMobileDrawer()"></div>
+    <div class="fixed inset-y-0 right-0 w-80 max-w-[85vw] bg-slate-900 border-l border-slate-800 p-6 flex flex-col justify-between shadow-2xl z-10 overflow-y-auto">
+      <div>
+        <!-- Drawer Header -->
+        <div class="flex items-center justify-between pb-5 border-b border-slate-800 mb-6">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-indigo-600/30 border border-indigo-500/50 flex items-center justify-center text-indigo-400">
+              <i data-lucide="ticket" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <div class="font-bold text-white text-sm">TadbirChipta</div>
+              <div class="text-[10px] text-slate-400">Mobil Boshqaruv</div>
+            </div>
+          </div>
+          <button onclick="toggleMobileDrawer()" class="p-1.5 text-slate-400 hover:text-white rounded-lg">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <!-- Drawer User Card (if logged in) -->
+        <div id="drawer-user-info" class="hidden mb-6 p-4 rounded-2xl bg-slate-800/60 border border-slate-700">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold text-base" id="drawer-user-initial">U</div>
+            <div>
+              <div id="drawer-username" class="text-sm font-bold text-white truncate">foydalanuvchi</div>
+              <div id="drawer-role-badge" class="text-[10px] font-semibold text-indigo-400 uppercase tracking-wider">USER</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Drawer Nav Links -->
+        <div class="space-y-1.5 font-medium text-sm">
+          <button onclick="navigate('events'); toggleMobileDrawer();" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition">
+            <i data-lucide="calendar" class="w-4 h-4 text-indigo-400"></i> Tadbirlar
+          </button>
+          <button onclick="navigate('my-tickets'); toggleMobileDrawer();" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition">
+            <i data-lucide="qr-code" class="w-4 h-4 text-emerald-400"></i> Mening Chiptalarim
+          </button>
+          <button onclick="navigate('organizer'); toggleMobileDrawer();" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition">
+            <i data-lucide="layout-dashboard" class="w-4 h-4 text-purple-400"></i> Tashkilotchi & Hisobot
+          </button>
+          <button onclick="navigate('controller'); toggleMobileDrawer();" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition">
+            <i data-lucide="scan-line" class="w-4 h-4 text-blue-400"></i> Nazorat (Skaner)
+          </button>
+          <div class="pt-3 border-t border-slate-800 mt-2">
+            <a href="/admin" target="_blank" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-indigo-300 bg-indigo-950/60 border border-indigo-500/30 font-bold transition">
+              <i data-lucide="shield-check" class="w-4 h-4 text-indigo-400"></i> Professional Admin Portal
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Drawer Bottom Actions -->
+      <div class="pt-6 border-t border-slate-800 space-y-2">
+        <div id="drawer-auth-actions">
+          <button onclick="openAuthModal('login'); toggleMobileDrawer();" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-sm transition mb-2">
+            Kirish
+          </button>
+          <button onclick="openAuthModal('register'); toggleMobileDrawer();" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold text-sm transition">
+            Ro'yxatdan O'tish
+          </button>
+        </div>
+        <button id="drawer-logout-btn" onclick="logout(); toggleMobileDrawer();" class="hidden w-full py-2.5 rounded-xl bg-red-500/20 text-red-300 hover:bg-red-500/30 font-semibold text-sm transition flex items-center justify-center gap-2">
+          <i data-lucide="log-out" class="w-4 h-4"></i> Tizimdan Chiqish
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- MAIN VIEWPORT CONTAINER -->
-  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
 
     <!-- 1. EVENTS VIEW -->
     <section id="view-events" class="view-panel">
@@ -778,6 +854,32 @@
       </form>
     </div>
   </div>
+
+  <!-- ========================================================================= -->
+  <!-- MOBILE BOTTOM NAVIGATION (iOS / Android Style)                            -->
+  <!-- ========================================================================= -->
+  <nav id="mobile-bottom-nav" class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-slate-900/95 backdrop-blur-2xl border-t border-slate-800 px-2 py-2 flex items-center justify-around shadow-2xl safe-area-bottom">
+    <button onclick="navigate('events')" id="mob-nav-events" class="mobile-nav-btn active flex flex-col items-center gap-1 text-indigo-400 px-2 py-1 transition flex-1">
+      <i data-lucide="calendar" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold">Tadbirlar</span>
+    </button>
+    <button onclick="navigate('my-tickets')" id="mob-nav-my-tickets" class="mobile-nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-white px-2 py-1 transition flex-1">
+      <i data-lucide="qr-code" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold">Chiptalar</span>
+    </button>
+    <button onclick="navigate('organizer')" id="mob-nav-organizer" class="mobile-nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-white px-2 py-1 transition flex-1">
+      <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold">Studia</span>
+    </button>
+    <button onclick="navigate('controller')" id="mob-nav-controller" class="mobile-nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-white px-2 py-1 transition flex-1">
+      <i data-lucide="scan-line" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold">Skaner</span>
+    </button>
+    <a href="/admin" target="_blank" class="mobile-nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-indigo-400 px-2 py-1 transition flex-1">
+      <i data-lucide="shield-check" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold">Admin</span>
+    </a>
+  </nav>
 
   <!-- JAVASCRIPT LOGIC -->
   <script src="/static/app.js"></script>
