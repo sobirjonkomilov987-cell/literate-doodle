@@ -33,6 +33,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- QRCode.js for generating QR codes -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -76,9 +77,6 @@
         <button onclick="navigate('controller')" id="nav-controller" class="nav-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all">
           <i data-lucide="scan-line" class="w-4 h-4"></i> Nazorat (Scanner)
         </button>
-        <button onclick="navigate('admin')" id="nav-admin" class="nav-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all">
-          <i data-lucide="shield-check" class="w-4 h-4"></i> Admin
-        </button>
       </nav>
 
       <!-- AUTH / USER ACTIONS -->
@@ -96,13 +94,10 @@
 
         <!-- LOGIN / REGISTER BUTTON (Desktop & Mobile) -->
         <div id="auth-buttons" class="flex items-center gap-1.5 sm:gap-2">
-          <a href="/admin" target="_blank" class="hidden sm:flex px-3 py-2 rounded-xl bg-indigo-950/80 hover:bg-indigo-900/80 text-indigo-300 border border-indigo-500/40 text-xs font-bold transition items-center gap-1.5 shadow">
-            <i data-lucide="shield" class="w-3.5 h-3.5 text-indigo-400"></i> Admin Portal
-          </a>
-          <button onclick="openAuthModal('login')" class="px-3 sm:px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs sm:text-sm font-semibold text-white border border-slate-700 transition flex items-center gap-1.5">
-            <i data-lucide="log-in" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i> Kirish
+          <button onclick="openAuthModal('login')" class="px-3 sm:px-4 py-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-xs sm:text-sm font-semibold text-white border border-slate-700/60 transition flex items-center gap-2 shadow-sm">
+            <i data-lucide="log-in" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-400"></i> Kirish
           </button>
-          <button onclick="openAuthModal('register')" class="hidden sm:flex px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition items-center gap-2">
+          <button onclick="openAuthModal('register')" class="hidden sm:flex px-4 py-2.5 rounded-xl btn-premium-gradient text-sm font-semibold text-white transition items-center gap-2">
             <i data-lucide="user-plus" class="w-4 h-4"></i> Ro'yxatdan o'tish
           </button>
         </div>
@@ -161,11 +156,6 @@
           <button onclick="navigate('controller'); toggleMobileDrawer();" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition">
             <i data-lucide="scan-line" class="w-4 h-4 text-blue-400"></i> Nazorat (Skaner)
           </button>
-          <div class="pt-3 border-t border-slate-800 mt-2">
-            <a href="/admin" target="_blank" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-indigo-300 bg-indigo-950/60 border border-indigo-500/30 font-bold transition">
-              <i data-lucide="shield-check" class="w-4 h-4 text-indigo-400"></i> Professional Admin Portal
-            </a>
-          </div>
         </div>
       </div>
 
@@ -453,23 +443,27 @@
           <span><strong>Kirish Nazorati Terminali:</strong> Ushbu bo'lim faqat kirish joylarida chipta tokenlarini skanerlash va tasdiqlash uchun mo'ljallangan. Barcha skanerlashlar darhol bazada bir martalik qilib belgilanadi.</span>
         </div>
 
-        <!-- SCANNER INPUT CARD -->
-        <div class="bg-cardBg rounded-3xl p-6 sm:p-8 border border-borderGlass shadow-2xl mb-8">
+        <!-- SCANNER INPUT CARD (Glassmorphism & Neumorphism) -->
+        <div class="glass-panel rounded-3xl p-6 sm:p-8 border border-borderGlass shadow-2xl mb-8">
           <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Chipta Tokeni (UUID yoki QR Kod matni):</label>
-          <div class="flex gap-2 mb-4">
+          <div class="flex flex-col sm:flex-row gap-3 mb-4">
             <div class="relative flex-1">
-              <i data-lucide="scan" class="w-5 h-5 absolute left-3.5 top-3.5 text-slate-400"></i>
-              <input id="scan-token-input" type="text" placeholder="Masalan: c6b8b981-807e-4091-a889-fa0812e9bcae" class="w-full bg-slate-950 border border-slate-700 rounded-xl pl-11 pr-4 py-3 text-white font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+              <i class="fa-solid fa-qrcode absolute left-4 top-4 text-indigo-400"></i>
+              <input id="scan-token-input" type="text" placeholder="Tokenni kiriting yoki skanerlang..." 
+                class="w-full glass-input rounded-xl pl-11 pr-4 py-3 text-sm text-white placeholder-slate-500 font-mono">
             </div>
-            <button onclick="handleVerifyTicket()" class="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold text-white transition shadow-lg shadow-blue-600/30 flex items-center gap-2">
-              <i data-lucide="check" class="w-5 h-5"></i> Tekshirish
+            <button onclick="handleVerifyTicket()" class="btn-premium-gradient py-3.5 px-7 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg">
+              <i class="fa-solid fa-bolt"></i>
+              <span>Tekshirish</span>
             </button>
           </div>
 
           <!-- QUICK PASTE TEST TOKENS HELPER -->
           <div class="flex items-center justify-between text-xs text-slate-400 pt-3 border-t border-slate-800">
             <span>Yaqinda olingan chiptalar tokenini tezkor joylash:</span>
-            <button onclick="pasteLastTicketToken()" class="text-indigo-400 hover:text-indigo-300 font-semibold underline">Oxirgi chiptam tokenini qo'yish</button>
+            <button onclick="pasteLastTicketToken()" class="text-indigo-400 hover:text-indigo-300 font-semibold underline flex items-center gap-1.5">
+              <i class="fa-solid fa-paste"></i> Oxirgi chiptam tokenini qo'yish
+            </button>
           </div>
         </div>
 
@@ -628,13 +622,13 @@
 
   <!-- 1. AUTH MODAL (LOGIN / REGISTER) -->
   <div id="auth-modal" class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="bg-cardBg border border-slate-700 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative">
+    <div class="glass-panel border border-slate-700/60 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative">
       <button onclick="closeAuthModal()" class="absolute top-5 right-5 text-slate-400 hover:text-white transition">
         <i data-lucide="x" class="w-6 h-6"></i>
       </button>
 
       <!-- TOP MODE SWITCHER TABS -->
-      <div class="flex rounded-2xl bg-slate-900/90 p-1.5 mb-6 border border-slate-800">
+      <div class="flex rounded-2xl bg-slate-900/90 p-1.5 mb-6 border border-slate-800/80">
         <button type="button" id="auth-tab-login" onclick="switchAuthTab('login')" class="flex-1 py-2.5 rounded-xl font-bold text-sm transition bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2">
           <i data-lucide="log-in" class="w-4 h-4"></i> Kirish
         </button>
@@ -650,39 +644,48 @@
 
       <form onsubmit="handleAuthSubmit(event)" class="space-y-4">
         <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">Login (Username)</label>
-          <input id="auth-username" type="text" required placeholder="Masalan: admin" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:ring-2 focus:ring-indigo-500">
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">Login (Username)</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+              <i data-lucide="user" class="w-4 h-4"></i>
+            </span>
+            <input id="auth-username" type="text" required placeholder="Foydalanuvchi nomini kiriting" 
+              class="w-full glass-input rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-slate-500">
+          </div>
         </div>
         <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">Parol</label>
-          <input id="auth-password" type="password" required placeholder="Parolni kiriting" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:ring-2 focus:ring-indigo-500">
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">Parol</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+              <i data-lucide="lock" class="w-4 h-4"></i>
+            </span>
+            <input id="auth-password" type="password" required placeholder="Parolingizni kiriting" 
+              class="w-full glass-input rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-slate-500">
+          </div>
         </div>
-        <button id="auth-submit-btn" type="submit" class="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 font-bold rounded-xl text-white text-sm shadow-lg shadow-indigo-600/30 transition">
-          Kirish
+        <button id="auth-submit-btn" type="submit" class="btn-premium-gradient w-full py-3.5 rounded-xl font-bold text-white text-sm shadow-lg flex items-center justify-center gap-2">
+          <i class="fa-solid fa-right-to-bracket"></i>
+          <span>Kirish</span>
         </button>
       </form>
 
       <!-- QUICK TEST ACCOUNTS HINT -->
       <div class="mt-6 pt-5 border-t border-slate-800">
         <div class="text-[11px] font-semibold text-slate-400 mb-2.5 flex items-center justify-between">
-          <span>Tayyor hisoblar (Tanlang va avto-to'ldiring):</span>
+          <span>Namunaviy hisoblar (Tanlang va avto-to'ldiring):</span>
         </div>
-        <div class="grid grid-cols-2 gap-2 text-xs">
-          <button type="button" onclick="quickFillLogin('sobirjon@admin', 'sobirjon@')" class="p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-indigo-500 text-left transition group">
-            <span class="font-bold text-indigo-400 group-hover:text-indigo-300 block">👑 Bosh Admin</span>
-            <span class="text-[10px] text-slate-400 font-mono">sobirjon@admin / sobirjon@</span>
-          </button>
+        <div class="grid grid-cols-3 gap-2 text-xs">
           <button type="button" onclick="quickFillLogin('art_palace', 'organizer123')" class="p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-purple-500 text-left transition group">
-            <span class="font-bold text-purple-400 group-hover:text-purple-300 block">🏛 Tashkilotchi</span>
-            <span class="text-[10px] text-slate-400 font-mono">art_palace / organizer123</span>
+            <span class="font-bold text-purple-400 group-hover:text-purple-300 block text-[11px]">🏛 Tashkilotchi</span>
+            <span class="text-[9px] text-slate-400 font-mono">art_palace</span>
           </button>
           <button type="button" onclick="quickFillLogin('gate_controller', 'controller123')" class="p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-blue-500 text-left transition group">
-            <span class="font-bold text-blue-400 group-hover:text-blue-300 block">🔍 Tekshiruvchi</span>
-            <span class="text-[10px] text-slate-400 font-mono">gate_controller / controller123</span>
+            <span class="font-bold text-blue-400 group-hover:text-blue-300 block text-[11px]">🔍 Tekshiruvchi</span>
+            <span class="text-[9px] text-slate-400 font-mono">controller</span>
           </button>
           <button type="button" onclick="quickFillLogin('mijoz1', 'mijoz123')" class="p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500 text-left transition group">
-            <span class="font-bold text-emerald-400 group-hover:text-emerald-300 block">👤 Mijoz (Test)</span>
-            <span class="text-[10px] text-slate-400 font-mono">mijoz1 / mijoz123</span>
+            <span class="font-bold text-emerald-400 group-hover:text-emerald-300 block text-[11px]">👤 Mijoz</span>
+            <span class="text-[9px] text-slate-400 font-mono">mijoz1</span>
           </button>
         </div>
       </div>
@@ -750,8 +753,8 @@
           <div id="selected-seat-price" class="text-xs font-semibold text-emerald-400">0 so'm</div>
         </div>
 
-        <button id="reserve-seat-btn" disabled onclick="handleReserveSeatClick()" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-sm text-white shadow-lg shadow-indigo-600/30 transition flex items-center justify-center gap-2">
-          <i data-lucide="lock" class="w-4 h-4"></i> 10 Daqiqaga Band Qilish
+        <button id="reserve-seat-btn" disabled onclick="handleReserveSeatClick()" class="w-full sm:w-auto px-7 py-3.5 rounded-xl btn-premium-gradient disabled:opacity-40 disabled:cursor-not-allowed font-bold text-sm text-white shadow-lg transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-lock"></i> <span>10 Daqiqaga Band Qilish</span>
         </button>
       </div>
 
@@ -760,29 +763,33 @@
 
   <!-- 3. PAYMENT MODAL (IDEMPOTENT MOCK CHECKOUT) -->
   <div id="payment-modal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="bg-cardBg border border-slate-700 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative">
+    <div class="glass-panel border border-slate-700/60 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative">
       <button onclick="closePaymentModal()" class="absolute top-5 right-5 text-slate-400 hover:text-white">
         <i data-lucide="x" class="w-6 h-6"></i>
       </button>
 
       <div class="text-center mb-6">
-        <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-black flex items-center justify-center mx-auto mb-3 shadow-lg shadow-emerald-500/25">
-          <i data-lucide="credit-card" class="w-7 h-7"></i>
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 text-white flex items-center justify-center mx-auto mb-3 shadow-lg shadow-indigo-500/30">
+          <i class="fa-solid fa-bolt text-xl"></i>
         </div>
         <h3 class="text-2xl font-extrabold text-white">To'lov Simulyatori</h3>
         <p class="text-xs text-slate-400 mt-1">Idempotent to'lov mexanizmi bilan xarid</p>
       </div>
 
       <!-- 10-MIN COUNTDOWN CLOCK -->
-      <div class="bg-amber-950/40 border border-amber-500/30 rounded-2xl p-4 mb-6 flex items-center justify-between">
+      <div class="glass-panel border border-amber-500/30 rounded-2xl p-4 mb-6 flex items-center justify-between live-pulse">
         <div class="flex items-center gap-3">
-          <i data-lucide="clock" class="w-5 h-5 text-amber-400 animate-pulse"></i>
+          <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
+            <i class="fa-solid fa-stopwatch animate-pulse text-lg"></i>
+          </div>
           <div>
-            <div class="text-xs text-amber-300/80">Rezervatsiya vaqti:</div>
-            <div id="payment-timer" class="text-xl font-mono font-extrabold text-amber-400">10:00</div>
+            <div class="text-[11px] text-amber-300/80 font-medium">Qolgan rezervatsiya vaqti:</div>
+            <div id="payment-timer" class="text-xl font-mono font-extrabold text-amber-400 tracking-wider">10:00</div>
           </div>
         </div>
-        <span class="text-[10px] uppercase font-semibold text-amber-300 px-2 py-1 rounded bg-amber-500/20">Vaqtli Qulf</span>
+        <span class="text-[10px] uppercase font-bold text-amber-300 px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span> Real-time
+        </span>
       </div>
 
       <!-- RESERVATION SUMMARY -->
@@ -807,11 +814,12 @@
 
       <!-- PAY BUTTON -->
       <div class="space-y-3">
-        <button id="pay-submit-btn" onclick="executeMockPayment()" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 font-extrabold rounded-xl text-black text-sm shadow-lg shadow-emerald-500/25 transition flex items-center justify-center gap-2">
-          <i data-lucide="check-circle" class="w-5 h-5"></i> To'lovni Tasdiqlash
+        <button id="pay-submit-btn" onclick="executeMockPayment()" class="w-full py-3.5 px-6 rounded-xl font-semibold text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:opacity-90 transition-all duration-300 shadow-lg shadow-indigo-500/25 active:scale-[0.98] flex items-center justify-center space-x-2">
+          <i class="fa-solid fa-bolt"></i>
+          <span>Xaridni Yakunlash</span>
         </button>
 
-        <button onclick="handleCancelCurrentReservation()" class="w-full py-2.5 bg-slate-800 hover:bg-red-500/20 text-slate-400 hover:text-red-400 font-semibold rounded-xl text-xs transition">
+        <button onclick="handleCancelCurrentReservation()" class="w-full py-2.5 bg-slate-800/80 hover:bg-red-500/20 text-slate-400 hover:text-red-400 font-semibold rounded-xl text-xs transition">
           Rezervatsiyani bekor qilish
         </button>
       </div>
@@ -875,10 +883,10 @@
       <i data-lucide="scan-line" class="w-5 h-5"></i>
       <span class="text-[10px] font-bold">Skaner</span>
     </button>
-    <a href="/admin" target="_blank" class="mobile-nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-indigo-400 px-2 py-1 transition flex-1">
-      <i data-lucide="shield-check" class="w-5 h-5"></i>
-      <span class="text-[10px] font-bold">Admin</span>
-    </a>
+    <button onclick="openAuthModal('login')" id="mob-nav-profile" class="mobile-nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-white px-2 py-1 transition flex-1">
+      <i data-lucide="user" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold">Kirish</span>
+    </button>
   </nav>
 
   <!-- JAVASCRIPT LOGIC -->
