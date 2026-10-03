@@ -2,35 +2,16 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 import time
 from collections import defaultdict
+from fastapi.security import HTTPAuthorizationCredentials
 from app.database import get_db
 from app.models import User, UserRole
 from app.schemas import (
     UserCreate, UserResponse, LoginRequest, Token,
     AdminRegisterRequest, AdminLoginRequest, ForgotPasswordRequest
 )
-from app.auth import get_password_hash, verify_password, create_access_token, get_current_user
-
-# Brute-force hujumlaridan himoya tizimi (Rate Limiting & Lockout)
-LOGIN_ATTEMPTS = defaultdict(list)
-MAX_LOGIN_ATTEMPTS = 5
-LOCKOUT_DURATION = 300 # 5 daqiqa bloklash
-
-def check_brute_force(key: str):
-    """5 marta xato urinishdan so'ng 5 daqiqaga bloklash"""
-    now = time.time()
-    LOGIN_ATTEMPTS[key] = [t for t in LOGIN_ATTEMPTS[key] if now - t < LOCKOUT_DURATION]
-    if len(LOGIN_ATTEMPTS[key]) >= MAX_LOGIN_ATTEMPTS:
-        remaining = int(LOCKOUT_DURATION - (now - LOGIN_ATTEMPTS[key][0]))
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail=f"Xavfsizlik: Ko'p marotaba noto'g'ri urinish amalga oshirildi (Brute-force himoyasi). Hisobingiz {remaining} soniyaga bloklandi."
-        )
-
-def record_failed_attempt(key: str):
-    LOGIN_ATTEMPTS[key].append(time.time())
-
-def clear_failed_attempts(key: str):
-    LOGIN_ATTEMPTS.pop(key, None)
+from app.auth import get_password_hash, verify_password, create_access_token, get_current_user, security
+from app.services.rate_limiter import check_brute_force, record_failed_attempt, clear_failed_attempts, blacklist_token
+from app.services.audit import log_activity
 
 router = APIRouter(prefix="/api/auth", tags=["Autentifikatsiya (Auth)"])
 
@@ -63,16 +44,39 @@ def register_customer(user_in: UserCreate, db: Session = Depends(get_db)):
 @router.post("/login", response_model=Token)
 def login(login_req: LoginRequest, db: Session = Depends(get_db)):
     """
-    Barcha foydalanuvchilar (Admin, Organizer, Customer, Controller) uchun login qilish.
-    Muvaffaqiyatli bo'lsa JWT token qaytaradi.
+    Barcha foydalanuvchilar uchun xavfsiz login qilish:
+    - Brute-force himoyasi (5 ta xato urinishdan so'ng 5 daqiqa bloklanadi)
+    - Audit log yuritish
+    - Xavfsiz JWT Bearer token qaytarish
     """
-    user = db.query(User).filter(User.username == login_req.username).first()
+    username_clean = login_req.username.strip()
+    brute_key = f"user_{username_clean.lower()}"
+    check_brute_force(brute_key)
+
+    user = db.query(User).filter(User.username == username_clean).first()
     if not user or not verify_password(login_req.password, user.password_hash):
+        record_failed_attempt(brute_key)
+        log_activity(
+            db=db,
+            action="Muvaffaqiyatsiz Login",
+            details=f"Foydalanuvchi '{username_clean}' uchun noto'g'ri parol kiritildi.",
+            username=username_clean
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Login yoki parol noto'g'ri",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    clear_failed_attempts(brute_key)
+
+    log_activity(
+        db=db,
+        user_id=user.id,
+        username=user.username,
+        action="Tizimga Kirish (Login)",
+        details=f"Foydalanuvchi '{user.username}' tizimga kirdi (Rol: {user.role})."
+    )
 
     access_token = create_access_token(
         data={"sub": user.username, "role": user.role, "id": user.id}
@@ -83,6 +87,27 @@ def login(login_req: LoginRequest, db: Session = Depends(get_db)):
         token_type="bearer",
         user=UserResponse.model_validate(user)
     )
+
+@router.post("/logout")
+def logout(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Joriy JWT tokenni qora ro'yxatga kiritish (Blacklist) va xavfsiz chiqish.
+    Bekor qilingan token boshqa qabul qilinmaydi.
+    """
+    token = credentials.credentials
+    blacklist_token(token)
+    log_activity(
+        db=db,
+        user_id=current_user.id,
+        username=current_user.username,
+        action="Tizimdan Chiqildi (Logout)",
+        details=f"Foydalanuvchi '{current_user.username}' sessiyasini yakunladi va token qora ro'yxatga kiritildi."
+    )
+    return {"success": True, "message": "Tizimdan muvaffaqiyatli chiqildi. Sessiya va token bekor qilindi."}
 
 @router.get("/me", response_model=UserResponse)
 def get_me(current_user: User = Depends(get_current_user)):
@@ -209,16 +234,12 @@ def admin_login(login_in: AdminLoginRequest, db: Session = Depends(get_db)):
     from app.models import ActivityLog
     if not user or not verify_password(login_in.password, user.password_hash):
         record_failed_attempt(key)
-        try:
-            fail_log = ActivityLog(
-                username=login_val,
-                action="Muvaffaqiyatsiz Admin Login",
-                details=f"'{login_val}' orqali noto'g'ri login yoki parol urinishi (Urinish qayd etildi)"
-            )
-            db.add(fail_log)
-            db.commit()
-        except Exception:
-            db.rollback()
+        log_activity(
+            db=db,
+            username=login_val,
+            action="Muvaffaqiyatsiz Admin Login",
+            details=f"'{login_val}' orqali noto'g'ri login yoki parol urinishi (Urinish qayd etildi)"
+        )
 
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -237,19 +258,14 @@ def admin_login(login_in: AdminLoginRequest, db: Session = Depends(get_db)):
     # Muvaffaqiyatli kirish - xatoliklar hisoblagichini tozalash
     clear_failed_attempts(key)
 
-
     # Muvaffaqiyatli login jurnali
-    try:
-        success_log = ActivityLog(
-            user_id=user.id,
-            username=user.username,
-            action="Admin Tizimga Kirdi",
-            details=f"Admin '{user.username}' tizim boshqaruviga kirdi."
-        )
-        db.add(success_log)
-        db.commit()
-    except Exception:
-        db.rollback()
+    log_activity(
+        db=db,
+        user_id=user.id,
+        username=user.username,
+        action="Admin Tizimga Kirdi",
+        details=f"Admin '{user.username}' tizim boshqaruviga kirdi."
+    )
 
     access_token = create_access_token(
         data={"sub": user.username, "role": user.role, "id": user.id}

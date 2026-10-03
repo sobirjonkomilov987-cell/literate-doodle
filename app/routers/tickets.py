@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from typing import List
 from app.database import get_db
@@ -30,6 +30,7 @@ def get_my_tickets(
 @router.post("/verify", response_model=TicketVerifyResponse)
 def verify_ticket(
     req: TicketVerifyRequest,
+    request: Request,
     db: Session = Depends(get_db),
     current_controller: User = Depends(require_controller_or_admin)
 ):
@@ -38,8 +39,15 @@ def verify_ticket(
     - Token faqat bir marta ishlatiladi ('used' bo'ladi)
     - Ikkinchi marta tekshirilganda RAD etiladi
     - Bekor qilingan chiptalar rad etiladi
+    - Har bir tekshiruv controller shaxsi va IP bilan audit jurnaliga yoziladi
     """
-    result = verify_ticket_token(db=db, token=req.token)
+    client_ip = request.client.host if request.client else "unknown"
+    result = verify_ticket_token(
+        db=db,
+        token=req.token,
+        controller_user=current_controller,
+        ip_address=client_ip
+    )
     return TicketVerifyResponse(
         valid=result["valid"],
         status=result["status"],

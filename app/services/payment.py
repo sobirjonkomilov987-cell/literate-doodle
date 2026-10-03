@@ -102,6 +102,7 @@ def process_mock_payment_callback(
 
     # 5. Muvaffaqiyatli xarid: Joy holatini 'sold' ga, rezervatsiyani 'completed' ga o'tkazish
     seat.status = SeatStatus.SOLD.value
+    seat.version = (seat.version or 1) + 1
     reservation.status = ReservationStatus.COMPLETED.value
 
     # 6. Unikal chipta tokenini (UUID) hosil qilish
@@ -132,6 +133,17 @@ def process_mock_payment_callback(
     db.refresh(new_tx)
 
     ticket_details = get_ticket_details(db, new_ticket)
+
+    from app.services.audit import log_activity
+    buyer = db.query(User).filter(User.id == reservation.user_id).first()
+    buyer_name = buyer.username if buyer else f"User#{reservation.user_id}"
+    log_activity(
+        db=db,
+        user_id=reservation.user_id,
+        username=buyer_name,
+        action="Chipta Xarid Qilindi (To'lov)",
+        details=f"Mijoz '{buyer_name}' #{seat.seat_number} joy uchun {amount:,.0f} so'm to'lov qildi (Chipta #{new_ticket.id}, TX: {new_tx.id})."
+    )
 
     return {
         "status": "success",

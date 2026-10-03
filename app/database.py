@@ -48,3 +48,10 @@ def migrate_database():
                 conn.execute(text("ALTER TABLE users ADD COLUMN avatar TEXT"))
             if "updated_at" not in columns:
                 conn.execute(text("ALTER TABLE users ADD COLUMN updated_at DATETIME"))
+                
+    # 3. Seats jadvalida version (concurrency) ustunini tekshirish va qo'shish
+    if "seats" in existing_tables:
+        seat_columns = [c["name"] for c in inspector.get_columns("seats")]
+        with engine.begin() as conn:
+            if "version" not in seat_columns:
+                conn.execute(text("ALTER TABLE seats ADD COLUMN version INTEGER DEFAULT 1"))

@@ -80,6 +80,7 @@ class Seat(Base):
     sector_id = Column(Integer, ForeignKey("sectors.id"), nullable=False)
     seat_number = Column(String(50), nullable=False)
     status = Column(String(50), default=SeatStatus.AVAILABLE.value, nullable=False, index=True)
+    version = Column(Integer, default=1, nullable=False)
 
     # Relationships
     sector = relationship("Sector", back_populates="seats")

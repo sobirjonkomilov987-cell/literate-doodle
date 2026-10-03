@@ -295,12 +295,30 @@ def mark_all_notifications_read(
     return {"success": True, "message": "Barcha bildirishnomalar o'qildi."}
 
 @router.get("/activities", response_model=List[ActivityLogResponse])
+@router.get("/audit-logs", response_model=List[ActivityLogResponse])
 def get_audit_activities(
+    search: Optional[str] = Query(None, description="Qidiruv (amal yoki tafsilot bo'yicha)"),
+    username: Optional[str] = Query(None, description="Foydalanuvchi bo'yicha filter"),
+    limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
     current_admin: User = Depends(require_admin)
 ):
-    """Oxirgi tizim faoliyatlari (Audit log)"""
-    return db.query(ActivityLog).order_by(ActivityLog.created_at.desc()).limit(50).all()
+    """
+    Xavfsizlik va Audit jurnali (Audit Trail):
+    - Chipta tekshiruvlari (qaysi controller qachon tekshirgani)
+    - Rezervatsiya va to'lovlar
+    - Login/Logout va administrator harakatlari
+    """
+    query = db.query(ActivityLog)
+    if username:
+        query = query.filter(ActivityLog.username.ilike(f"%{username.strip()}%"))
+    if search:
+        search_filter = f"%{search.strip()}%"
+        query = query.filter(
+            (ActivityLog.action.ilike(search_filter)) | (ActivityLog.details.ilike(search_filter))
+        )
+    return query.order_by(ActivityLog.created_at.desc()).offset(offset).limit(limit).all()
 
 @router.delete("/users/{user_id}", status_code=status.HTTP_200_OK)
 def delete_user(

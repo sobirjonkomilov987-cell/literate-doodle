@@ -1,10 +1,11 @@
 import asyncio
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
+from app.services.rate_limiter import check_ip_rate_limit
 import os
 
 from app.config import settings
@@ -199,6 +200,34 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Global Rate Limiting Middleware (DDoS & Brute-force himoyasi)
+@app.middleware("http")
+async def rate_limiting_middleware(request: Request, call_next):
+    path = request.url.path
+    # Faqat /api endpointlari uchun tekshiriladi (statik fayllar cheklovlarsiz tez ishlaydi)
+    if path.startswith("/api"):
+        client_ip = request.client.host if request.client else "127.0.0.1"
+        is_limited, current, limit, retry_after = check_ip_rate_limit(client_ip, path)
+        if is_limited:
+            return JSONResponse(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                content={
+                    "detail": f"So'rovlar soni me'yordan oshdi (Rate Limit Exceeded). Qayta urinish uchun {retry_after} soniya kuting."
+                },
+                headers={
+                    "Retry-After": str(retry_after),
+                    "X-RateLimit-Limit": str(limit),
+                    "X-RateLimit-Remaining": "0",
+                    "X-RateLimit-Reset": str(retry_after)
+                }
+            )
+        response = await call_next(request)
+        response.headers["X-RateLimit-Limit"] = str(limit)
+        response.headers["X-RateLimit-Remaining"] = str(max(0, limit - current))
+        return response
+
+    return await call_next(request)
 
 # API routerlarini ulash
 app.include_router(auth.router)

@@ -38,6 +38,14 @@ def get_current_user(
     db: Session = Depends(get_db)
 ) -> User:
     token = credentials.credentials
+    from app.services.rate_limiter import is_token_blacklisted
+    if is_token_blacklisted(token):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Ushbu sessiya/token bekor qilingan (Tizimdan chiqilgan). Iltimos, qaytadan kiring.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Autentifikatsiya ma'lumotlari yaroqsiz yoki muddati o'tgan",
@@ -69,7 +77,8 @@ def require_roles(*allowed_roles: str):
         return current_user
     return role_checker
 
-# Role-specific shortcuts
+# Role-specific shortcuts (RBAC)
 require_admin = require_roles(UserRole.ADMIN.value)
 require_organizer_or_admin = require_roles(UserRole.ORGANIZER.value, UserRole.ADMIN.value)
 require_controller_or_admin = require_roles(UserRole.CONTROLLER.value, UserRole.ADMIN.value)
+require_customer = require_roles(UserRole.CUSTOMER.value, UserRole.USER.value, UserRole.ADMIN.value)

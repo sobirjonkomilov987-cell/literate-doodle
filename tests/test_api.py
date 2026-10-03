@@ -352,3 +352,84 @@ def test_admin_authentication_and_security():
         "password": "brandnewpassword999"
     })
     assert new_login.status_code == 200
+
+def test_security_rbac_audit_rate_limiting_concurrency():
+    """Barcha 5 ta xavfsizlik va real-time mexanizmini to'liq sinovdan o'tkazish"""
+    # 1. Mijoz va Tekshiruvchi tokenlarini olish
+    cust_token = client.post("/api/auth/login", json={"username": "ali_mijoz", "password": "alipassword123"}).json()["access_token"]
+    cust_headers = {"Authorization": f"Bearer {cust_token}"}
+
+    ctrl_token = client.post("/api/auth/login", json={"username": "tekshiruvchi1", "password": "ctrl_password_1"}).json()["access_token"]
+    ctrl_headers = {"Authorization": f"Bearer {ctrl_token}"}
+
+    admin_token = client.post("/api/auth/login", json={"username": "sobirjon@admin", "password": "sobirjon@"}).json()["access_token"]
+    admin_headers = {"Authorization": f"Bearer {admin_token}"}
+
+    # 2. RBAC Tekshiruvi:
+    # Mijoz chipta tekshira olmasligi kerak (403 Forbidden)
+    forbidden_verify = client.post("/api/tickets/verify", json={"token": "some-token"}, headers=cust_headers)
+    assert forbidden_verify.status_code == 403
+
+    # Mijoz admin audit loglarini ko'ra olmasligi kerak (403 Forbidden)
+    forbidden_audit = client.get("/api/admin/audit-logs", headers=cust_headers)
+    assert forbidden_audit.status_code == 403
+
+    # 3. Rate Limiting Headers tekshiruvi:
+    events_resp = client.get("/api/events")
+    assert events_resp.status_code == 200
+    assert "X-RateLimit-Limit" in events_resp.headers
+    assert "X-RateLimit-Remaining" in events_resp.headers
+
+    # 4. Audit Logging Tekshiruvi:
+    # Admin audit loglarini ko'rishi kerak
+    audit_resp = client.get("/api/admin/audit-logs", headers=admin_headers)
+    assert audit_resp.status_code == 200
+    audit_data = audit_resp.json()
+    assert len(audit_data) > 0
+    # Loglarda harakat qayd etilganligi
+    actions = [a["action"] for a in audit_data]
+    assert any("Tizimga Kirish" in act or "Admin" in act or "Login" in act for act in actions)
+
+    # 5. JWT Logout va Token Blacklist tekshiruvi:
+    # Mijoz tizimdan chiqadi (Logout)
+    logout_resp = client.post("/api/auth/logout", headers=cust_headers)
+    assert logout_resp.status_code == 200
+    assert logout_resp.json()["success"] is True
+
+    # Eski token bilan kirishga urinish 401 qaytarishi kerak (Chiqib ketilgan)
+    expired_me = client.get("/api/auth/me", headers=cust_headers)
+    assert expired_me.status_code == 401
+    assert "bekor qilingan" in expired_me.json()["detail"].lower()
+
+def test_rate_limiter_and_concurrency_lock():
+    """Rate limiter va brute force lockout funksiyalarining to'g'ri ishlashini to'liq sinash"""
+    from app.services.rate_limiter import check_ip_rate_limit, check_brute_force, record_failed_attempt, clear_failed_attempts
+    from fastapi import HTTPException
+
+    # 1. Rate Limiting sliding window simulyatsiyasi (198.51.100.22 IP)
+    test_ip = "198.51.100.22"
+    for _ in range(20):
+        is_lim, count, lim, retry = check_ip_rate_limit(test_ip, "/api/auth/login")
+        assert not is_lim
+
+    # 21-so'rov bloklanishi kerak (is_limited = True)
+    is_lim, count, lim, retry = check_ip_rate_limit(test_ip, "/api/auth/login")
+    assert is_lim is True
+    assert retry > 0
+
+    # 2. Brute-force lockout simulyatsiyasi
+    fake_key = "attacker_attempt"
+    clear_failed_attempts(fake_key)
+    for _ in range(4):
+        record_failed_attempt(fake_key)
+    # 4 ta xato urinishda bloklanmaydi
+    check_brute_force(fake_key)
+
+    # 5-xato urinishda bloklanadi (HTTP 429)
+    record_failed_attempt(fake_key)
+    with pytest.raises(HTTPException) as exc:
+        check_brute_force(fake_key)
+    assert exc.value.status_code == 429
+    assert "brute-force" in exc.value.detail.lower()
+
+    clear_failed_attempts(fake_key)

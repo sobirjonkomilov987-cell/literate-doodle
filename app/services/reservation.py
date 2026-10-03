@@ -29,6 +29,7 @@ def release_expired_reservations(db: Session) -> int:
         seat = db.query(Seat).filter(Seat.id == res.seat_id).first()
         if seat and seat.status == SeatStatus.RESERVED.value:
             seat.status = SeatStatus.AVAILABLE.value
+            seat.version = (seat.version or 1) + 1
         count += 1
 
     if count > 0:
@@ -91,8 +92,9 @@ def reserve_seat(db: Session, user_id: int, seat_id: int) -> Reservation:
         elif active_res:
             active_res.status = ReservationStatus.EXPIRED.value
 
-    # Joyni 'reserved' holatiga o'tkazish
+    # Joyni 'reserved' holatiga o'tkazish va versiyani oshirish (Optimistic locking)
     seat.status = SeatStatus.RESERVED.value
+    seat.version = (seat.version or 1) + 1
 
     now = get_current_utc_time()
     expires_at = now + timedelta(minutes=settings.RESERVATION_TIMEOUT_MINUTES)
@@ -109,6 +111,18 @@ def reserve_seat(db: Session, user_id: int, seat_id: int) -> Reservation:
     db.commit()
     db.refresh(new_reservation)
 
+    from app.services.audit import log_activity
+    from app.models import User
+    user = db.query(User).filter(User.id == user_id).first()
+    username = user.username if user else f"User#{user_id}"
+    log_activity(
+        db=db,
+        user_id=user_id,
+        username=username,
+        action="Joy Rezervatsiya Qilindi",
+        details=f"Foydalanuvchi '{username}' #{seat.seat_number} joyni 10 daqiqaga band qildi (Seat ID: {seat.id})."
+    )
+
     return new_reservation
 
 def cancel_reservation(db: Session, reservation_id: int, user_id: int) -> bool:
@@ -124,6 +138,19 @@ def cancel_reservation(db: Session, reservation_id: int, user_id: int) -> bool:
         seat = db.query(Seat).filter(Seat.id == res.seat_id).first()
         if seat and seat.status == SeatStatus.RESERVED.value:
             seat.status = SeatStatus.AVAILABLE.value
+            seat.version = (seat.version or 1) + 1
         db.commit()
+
+        from app.services.audit import log_activity
+        from app.models import User
+        user = db.query(User).filter(User.id == user_id).first()
+        username = user.username if user else f"User#{user_id}"
+        log_activity(
+            db=db,
+            user_id=user_id,
+            username=username,
+            action="Rezervatsiya Bekor Qilindi",
+            details=f"Foydalanuvchi '{username}' #{seat.seat_number if seat else res.seat_id} joy rezervatsiyasini bekor qildi, joy bo'shatildi."
+        )
         return True
     return False
