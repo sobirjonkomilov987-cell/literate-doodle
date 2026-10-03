@@ -18,20 +18,65 @@ router = APIRouter(prefix="/api/auth", tags=["Autentifikatsiya (Auth)"])
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def register_customer(user_in: UserCreate, db: Session = Depends(get_db)):
     """
-    Mijoz (Customer) uchun ro'yxatdan o'tish.
-    Xavfsizlik qoidasi: Tashkilotchi (Organizer) va Admin o'z-o'zidan ro'yxatdan o'ta olmaydi.
-    Ushbu endpoint orqali faqat 'customer' roli beriladi.
+    Mijoz (Customer) uchun mukammal va xavfsiz ro'yxatdan o'tish:
+    - Login (username) unikalligi va uzunligi (kamida 3 ta belgi)
+    - Parol uzunligi (kamida 6 ta belgi)
+    - Parollar mosligi (confirm_password tekshiruvi)
+    - Email formati va unikalligi (agar kiritilsa)
+    - To'liq ism va telefon raqami saqlanadi
+    - Xavfsizlik audit logi yuritiladi
     """
-    existing_user = db.query(User).filter(User.username == user_in.username).first()
+    import re
+    username_clean = user_in.username.strip()
+    if len(username_clean) < 3:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Foydalanuvchi nomi (login) kamida 3 ta belgidan iborat bo'lishi kerak."
+        )
+
+    existing_user = db.query(User).filter(User.username == username_clean).first()
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Ushbu login (username) band. Boshqa login tanlang."
+            detail=f"'{username_clean}' logini allaqachon band. Iltimos, boshqa login tanlang."
         )
 
-    # Tashkilotchi yoki boshqa maxsus rollarni o'zboshimchalik bilan ololmaydi
+    # Parol uzunligini tekshirish
+    if len(user_in.password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Parol kamida 6 ta belgidan iborat bo'lishi shart."
+        )
+
+    # Parollar bir xilligini tekshirish
+    if user_in.confirm_password and user_in.password != user_in.confirm_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Kiritilgan parollar bir-biriga mos kelmadi! Iltimos, qayta tekshiring."
+        )
+
+    # Email tekshiruvi (agar mavjud bo'lsa)
+    email_clean = user_in.email.strip().lower() if user_in.email else None
+    if email_clean:
+        email_regex = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
+        if not re.match(email_regex, email_clean):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email formati noto'g'ri kiritildi. Masalan: mijoz@tadbirchipta.uz"
+            )
+        existing_email = db.query(User).filter(User.email == email_clean).first()
+        if existing_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Ushbu email manzili boshqa hisob tomonidan band qilingan."
+            )
+
+    # Yangi mijoz yaratish
     new_user = User(
-        username=user_in.username,
+        name=user_in.name.strip() if user_in.name else username_clean,
+        username=username_clean,
+        email=email_clean,
+        phone=user_in.phone.strip() if user_in.phone else None,
         password_hash=get_password_hash(user_in.password),
         role=UserRole.CUSTOMER.value,
         organization_name=None
@@ -39,6 +84,16 @@ def register_customer(user_in: UserCreate, db: Session = Depends(get_db)):
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+
+    # Audit log
+    log_activity(
+        db=db,
+        user_id=new_user.id,
+        username=new_user.username,
+        action="Yangi Ro'yxatdan O'tish",
+        details=f"Yangi mijoz '{new_user.username}' tizimda muvaffaqiyatli ro'yxatdan o'tdi."
+    )
+
     return new_user
 
 @router.post("/login", response_model=Token)

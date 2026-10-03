@@ -205,13 +205,36 @@ function updateAuthUI(user) {
 
 let isRegisterMode = false;
 
+function togglePasswordVisibility(inputId, iconId) {
+  const input = document.getElementById(inputId);
+  const icon = document.getElementById(iconId);
+  if (!input) return;
+  if (input.type === "password") {
+    input.type = "text";
+    if (icon) {
+      icon.setAttribute("data-lucide", "eye-off");
+    }
+  } else {
+    input.type = "password";
+    if (icon) {
+      icon.setAttribute("data-lucide", "eye");
+    }
+  }
+  if (window.lucide) lucide.createIcons();
+}
+
 function switchAuthTab(mode) {
   isRegisterMode = (mode === 'register');
   const tabLogin = document.getElementById("auth-tab-login");
   const tabRegister = document.getElementById("auth-tab-register");
   const title = document.getElementById("auth-modal-title");
   const sub = document.getElementById("auth-modal-subtitle");
-  const btn = document.getElementById("auth-submit-btn");
+  const submitText = document.getElementById("auth-submit-text");
+  const submitIcon = document.getElementById("auth-submit-icon");
+  const groupName = document.getElementById("auth-group-name");
+  const groupContact = document.getElementById("auth-group-contact");
+  const groupConfirm = document.getElementById("auth-group-confirm");
+  const confirmInput = document.getElementById("auth-confirm-password");
 
   if (isRegisterMode) {
     if (tabLogin) {
@@ -221,8 +244,14 @@ function switchAuthTab(mode) {
       tabRegister.className = "flex-1 py-2.5 rounded-xl font-bold text-sm transition bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2";
     }
     if (title) title.textContent = "Ro'yxatdan O'tish";
-    if (sub) sub.textContent = "Mijoz (Customer) sifatida yangi hisob yarating";
-    if (btn) btn.textContent = "Ro'yxatdan O'tish va Kirish";
+    if (sub) sub.textContent = "Yangi hisob oching va chiptalarni oson xarid qiling";
+    if (submitText) submitText.textContent = "Ro'yxatdan O'tish va Kirish";
+    if (submitIcon) submitIcon.className = "fa-solid fa-user-plus";
+
+    if (groupName) groupName.classList.remove("hidden");
+    if (groupContact) groupContact.classList.remove("hidden");
+    if (groupConfirm) groupConfirm.classList.remove("hidden");
+    if (confirmInput) confirmInput.required = true;
   } else {
     if (tabLogin) {
       tabLogin.className = "flex-1 py-2.5 rounded-xl font-bold text-sm transition bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2";
@@ -232,7 +261,16 @@ function switchAuthTab(mode) {
     }
     if (title) title.textContent = "Tizimga Kirish";
     if (sub) sub.textContent = "Shaxsiy hisobingizga kiring";
-    if (btn) btn.textContent = "Kirish";
+    if (submitText) submitText.textContent = "Kirish";
+    if (submitIcon) submitIcon.className = "fa-solid fa-right-to-bracket";
+
+    if (groupName) groupName.classList.add("hidden");
+    if (groupContact) groupContact.classList.add("hidden");
+    if (groupConfirm) groupConfirm.classList.add("hidden");
+    if (confirmInput) {
+      confirmInput.required = false;
+      confirmInput.value = "";
+    }
   }
   if (window.lucide) lucide.createIcons();
 }
@@ -297,41 +335,80 @@ async function handleAuthSubmit(e) {
   const username = document.getElementById("auth-username").value.trim();
   const password = document.getElementById("auth-password").value.trim();
 
-  if (!username || !password) {
-    showToast("Login va parolni kiriting", "warning");
+  if (!username) {
+    showToast("Iltimos, foydalanuvchi nomini (login) kiriting", "warning");
+    return;
+  }
+
+  if (username.length < 3) {
+    showToast("Foydalanuvchi nomi kamida 3 ta belgidan iborat bo'lishi kerak", "warning");
+    return;
+  }
+
+  if (!password) {
+    showToast("Iltimos, parolni kiriting", "warning");
+    return;
+  }
+
+  if (password.length < 6) {
+    showToast("Parol kamida 6 ta belgidan iborat bo'lishi kerak", "warning");
     return;
   }
 
   try {
     if (isRegisterMode) {
+      const name = (document.getElementById("auth-name")?.value || "").trim();
+      const phone = (document.getElementById("auth-phone")?.value || "").trim();
+      const email = (document.getElementById("auth-email")?.value || "").trim();
+      const confirmPassword = (document.getElementById("auth-confirm-password")?.value || "").trim();
+
+      if (password !== confirmPassword) {
+        showToast("Kiritilgan parollar bir-biriga mos kelmadi! Qaytadan tekshiring.", "error");
+        return;
+      }
+
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showToast("Noto'g'ri email formati kiritildi", "warning");
+        return;
+      }
+
       // Agar admin yoki tizim rollari bo'lsa to'g'ridan-to'g'ri kirish
       if (['admin', 'art_palace', 'gate_controller'].includes(username.toLowerCase())) {
         await attemptLogin(username, password);
         return;
       }
 
+      const payload = {
+        username: username,
+        password: password,
+        name: name || undefined,
+        phone: phone || undefined,
+        email: email || undefined,
+        confirm_password: confirmPassword
+      };
+
       // Yangi ro'yxatdan o'tish
       const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
 
       if (!res.ok) {
-        // Agar login band bo'lsa, to'g'ridan to'g'ri kirishni sinab ko'ramiz
+        // Agar login band bo'lsa
         if (res.status === 400 && (data.detail?.includes("band") || data.detail?.includes("mavjud"))) {
           try {
             await attemptLogin(username, password);
             return;
           } catch (loginErr) {
-            throw new Error("Ushbu login band va parol mos kelmadi. Iltimos 'Kirish' bo'limini tanlang.");
+            throw new Error("Ushbu login band va parol mos kelmadi. Iltimos boshqa login tanlang yoki 'Kirish' orqali kiring.");
           }
         }
         throw new Error(data.detail || "Ro'yxatdan o'tishda xatolik");
       }
 
-      showToast("Ro'yxatdan muvaffaqiyatli o'tdingiz!", "success");
+      showToast("Ro'yxatdan muvaffaqiyatli o'tdingiz! Xush kelibsiz.", "success");
       await attemptLogin(username, password);
     } else {
       await attemptLogin(username, password);

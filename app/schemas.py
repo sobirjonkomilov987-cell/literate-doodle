@@ -11,6 +11,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    confirm_password: Optional[str] = None
     role: Optional[str] = "customer"
     organization_name: Optional[str] = None
 

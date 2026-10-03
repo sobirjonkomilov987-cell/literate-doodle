@@ -433,3 +433,87 @@ def test_rate_limiter_and_concurrency_lock():
     assert "brute-force" in exc.value.detail.lower()
 
     clear_failed_attempts(fake_key)
+
+def test_customer_registration_full_flow():
+    """Ro'yxatdan o'tish jarayonining barcha qat'iy tekshiruvlarini (validatsiya) to'liq sinash"""
+    # 1. Juda qisqa login (<3 belgi)
+    res_short_u = client.post("/api/auth/register", json={
+        "username": "ab",
+        "password": "validpassword123",
+        "confirm_password": "validpassword123"
+    })
+    assert res_short_u.status_code == 400
+    assert "kamida 3" in res_short_u.json()["detail"]
+
+    # 2. Qisqa parol (<6 belgi)
+    res_short_p = client.post("/api/auth/register", json={
+        "username": "new_user_test",
+        "password": "123",
+        "confirm_password": "123"
+    })
+    assert res_short_p.status_code == 400
+    assert "kamida 6" in res_short_p.json()["detail"]
+
+    # 3. Parollar mos kelmasligi
+    res_mismatch = client.post("/api/auth/register", json={
+        "username": "new_user_test",
+        "password": "validpassword123",
+        "confirm_password": "different_pass"
+    })
+    assert res_mismatch.status_code == 400
+    assert "mos kelmadi" in res_mismatch.json()["detail"]
+
+    # 4. Noto'g'ri email formati
+    res_bad_email = client.post("/api/auth/register", json={
+        "username": "new_user_test",
+        "password": "validpassword123",
+        "confirm_password": "validpassword123",
+        "email": "not-an-email"
+    })
+    assert res_bad_email.status_code == 400
+    assert "email" in res_bad_email.json()["detail"].lower()
+
+    # 5. Muvaffaqiyatli ro'yxatdan o'tish
+    valid_payload = {
+        "name": "Sobirjon Komilov",
+        "username": "sobirjon_client_99",
+        "phone": "+998901234567",
+        "email": "sobirjon.new@example.com",
+        "password": "SecretPassword123!",
+        "confirm_password": "SecretPassword123!"
+    }
+    res_success = client.post("/api/auth/register", json=valid_payload)
+    assert res_success.status_code == 201
+    created = res_success.json()
+    assert created["username"] == "sobirjon_client_99"
+    assert created["role"] == "customer"
+    assert created["name"] == "Sobirjon Komilov"
+    assert created["email"] == "sobirjon.new@example.com"
+    assert "password_hash" not in created  # Parol xeshi javobda sizib chiqmasligi kerak!
+
+    # 6. Bir xil login bilan qayta urinish (Duplicate username)
+    res_dup_u = client.post("/api/auth/register", json=valid_payload)
+    assert res_dup_u.status_code == 400
+    assert "band" in res_dup_u.json()["detail"]
+
+    # 7. Bir xil email bilan qayta urinish (Duplicate email)
+    dup_email_payload = {
+        "name": "Boshqa Shaxs",
+        "username": "boshqa_login_77",
+        "email": "sobirjon.new@example.com",
+        "password": "SecretPassword123!",
+        "confirm_password": "SecretPassword123!"
+    }
+    res_dup_e = client.post("/api/auth/register", json=dup_email_payload)
+    assert res_dup_e.status_code == 400
+    assert "email" in res_dup_e.json()["detail"].lower()
+
+    # 8. Yangi yaratilgan hisob orqali tizimga muvaffaqiyatli kirish
+    login_resp = client.post("/api/auth/login", json={
+        "username": "sobirjon_client_99",
+        "password": "SecretPassword123!"
+    })
+    assert login_resp.status_code == 200
+    token_data = login_resp.json()
+    assert "access_token" in token_data
+    assert token_data["user"]["role"] == "customer"
