@@ -18,17 +18,19 @@ def seed_initial_data():
     """Boshlang'ich Admin va namunaviy ma'lumotlarni bazaga kiritish"""
     db = SessionLocal()
     try:
-        # 1. Bosh Adminni tekshirish va yaratish / yangilash (Parol: sobirjon123)
-        admin_user = db.query(User).filter(User.username == settings.ADMIN_DEFAULT_USERNAME).first()
+        # 1. Bosh Adminni tekshirish va yaratish / yangilash (sobirjon@admin / sobirjon@)
+        admin_user = db.query(User).filter(
+            (User.username == settings.ADMIN_DEFAULT_USERNAME) | (User.email == settings.ADMIN_DEFAULT_USERNAME)
+        ).first()
         if not admin_user:
             admin_user = User(
                 name="Sobirjon Bosh Administrator",
                 username=settings.ADMIN_DEFAULT_USERNAME,
-                email="admin@tadbirchipta.uz",
+                email=settings.ADMIN_DEFAULT_USERNAME,
                 phone="+998 90 123 45 67",
                 password_hash=get_password_hash(settings.ADMIN_DEFAULT_PASSWORD),
                 role=UserRole.ADMIN.value,
-                avatar="https://api.dicebear.com/7.x/bottts/svg?seed=admin",
+                avatar="https://api.dicebear.com/7.x/bottts/svg?seed=sobirjon",
                 organization_name="Bosh Ma'muriyat (System Admin)"
             )
             db.add(admin_user)
@@ -36,16 +38,12 @@ def seed_initial_data():
             db.refresh(admin_user)
             print(f"[INIT] Bosh admin yaratildi: {settings.ADMIN_DEFAULT_USERNAME} / {settings.ADMIN_DEFAULT_PASSWORD}")
         else:
-            # Mavjud admin profilini boyitish
-            if not admin_user.name:
-                admin_user.name = "Sobirjon Bosh Administrator"
-            if not admin_user.email:
-                admin_user.email = "admin@tadbirchipta.uz"
-            if not admin_user.phone:
-                admin_user.phone = "+998 90 123 45 67"
-            if not admin_user.avatar:
-                admin_user.avatar = "https://api.dicebear.com/7.x/bottts/svg?seed=admin"
+            # Mavjud admin profilini va parolini sobirjon@ ga yangilash
+            admin_user.password_hash = get_password_hash(settings.ADMIN_DEFAULT_PASSWORD)
+            admin_user.name = "Sobirjon Bosh Administrator"
+            admin_user.role = UserRole.ADMIN.value
             db.commit()
+            print(f"[INIT] Bosh admin yangilandi: {settings.ADMIN_DEFAULT_USERNAME}")
 
         # Boshlang'ich bildirishnomalar va faoliyatlar
         if db.query(AdminNotification).count() == 0:
@@ -224,14 +222,28 @@ def read_root():
         return FileResponse(index_file)
     return {"message": "Tadbir chiptalari API ishga tushdi. OpenAPI hujjatlari: /docs"}
 
-@app.get("/admin")
-@app.get("/admin/login")
-@app.get("/admin/register")
-@app.get("/admin/dashboard")
-@app.get("/admin/profile")
-def read_admin_portal():
-    """Admin boshqaruv portali sahifalarini ochish"""
+# Maxfiy Yashirin Admin Portal Yo'nalishi (Obfuscated Secret Route)
+@app.get("/secure-admin-portal-xyz")
+@app.get("/secure-admin-portal-xyz/login")
+@app.get("/secure-admin-portal-xyz/register")
+@app.get("/secure-admin-portal-xyz/dashboard")
+@app.get("/secure-admin-portal-xyz/profile")
+@app.get("/secure-admin-portal-xyz/{path:path}")
+def read_secure_admin_portal():
+    """Yashirin maxfiy Admin boshqaruv portali sahifalarini ochish"""
     admin_file = os.path.join(static_dir, "admin.html")
     if os.path.exists(admin_file):
         return FileResponse(admin_file)
     return FileResponse(os.path.join(static_dir, "index.html"))
+
+# Ommaviy /admin yo'nalishlarini bloklash (404 Not Found)
+@app.get("/admin")
+@app.get("/admin/{path:path}")
+def block_public_admin():
+    """Ommaviy /admin yo'nalishini begonalardan yashirish (404 Not Found)"""
+    from fastapi import HTTPException
+    raise HTTPException(
+        status_code=404,
+        detail="Not Found - Ushbu yo'nalish mavjud emas yoki kirish bloklangan"
+    )
+

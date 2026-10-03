@@ -14,11 +14,13 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440 # 24 soat
     
-    # Bosh Admin Sozlamalari
-    ADMIN_DEFAULT_USERNAME: str = "admin"
-    ADMIN_DEFAULT_PASSWORD: str = "sobirjon123"
+    # Bosh Admin Sozlamalari (Maxfiy Kirish)
+    ADMIN_DEFAULT_USERNAME: str = "sobirjon@admin"
+    ADMIN_DEFAULT_PASSWORD: str = "sobirjon@"
+    ADMIN_SECRET_PATH: str = "/secure-admin-portal-xyz"
     
     # Rezervatsiya vaqti (daqiqalarda)
     RESERVATION_TIMEOUT_MINUTES: int = 10
 
 settings = Settings()
+

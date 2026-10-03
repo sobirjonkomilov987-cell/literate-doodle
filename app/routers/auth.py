@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+import time
+from collections import defaultdict
 from app.database import get_db
 from app.models import User, UserRole
 from app.schemas import (
@@ -7,6 +9,28 @@ from app.schemas import (
     AdminRegisterRequest, AdminLoginRequest, ForgotPasswordRequest
 )
 from app.auth import get_password_hash, verify_password, create_access_token, get_current_user
+
+# Brute-force hujumlaridan himoya tizimi (Rate Limiting & Lockout)
+LOGIN_ATTEMPTS = defaultdict(list)
+MAX_LOGIN_ATTEMPTS = 5
+LOCKOUT_DURATION = 300 # 5 daqiqa bloklash
+
+def check_brute_force(key: str):
+    """5 marta xato urinishdan so'ng 5 daqiqaga bloklash"""
+    now = time.time()
+    LOGIN_ATTEMPTS[key] = [t for t in LOGIN_ATTEMPTS[key] if now - t < LOCKOUT_DURATION]
+    if len(LOGIN_ATTEMPTS[key]) >= MAX_LOGIN_ATTEMPTS:
+        remaining = int(LOCKOUT_DURATION - (now - LOGIN_ATTEMPTS[key][0]))
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Xavfsizlik: Ko'p marotaba noto'g'ri urinish amalga oshirildi (Brute-force himoyasi). Hisobingiz {remaining} soniyaga bloklandi."
+        )
+
+def record_failed_attempt(key: str):
+    LOGIN_ATTEMPTS[key].append(time.time())
+
+def clear_failed_attempts(key: str):
+    LOGIN_ATTEMPTS.pop(key, None)
 
 router = APIRouter(prefix="/api/auth", tags=["Autentifikatsiya (Auth)"])
 
@@ -166,23 +190,30 @@ def register_admin(admin_in: AdminRegisterRequest, db: Session = Depends(get_db)
 def admin_login(login_in: AdminLoginRequest, db: Session = Depends(get_db)):
     """
     Alohida /admin/login endpointi:
-    - Email yoki username orqali kirish
-    - Parolni tekshirish
-    - Faqat 'admin' roliga ruxsat beriladi (oddiy user kira olmaydi)
+    - Email yoki username orqali kirish (sobirjon@admin)
+    - Parolni tekshirish (sobirjon@)
+    - Faqat 'admin' roliga ruxsat beriladi
+    - Brute-force himoyasi: 5 marta xatodan so'ng 5 daqiqa bloklanadi
     - Xavfsizlik audit logi yuritiladi
     """
     login_val = login_in.login.strip()
+    key = f"admin_{login_val.lower()}"
+    
+    # 1. Brute-force hujumini tekshirish
+    check_brute_force(key)
+
     user = db.query(User).filter(
         (User.username == login_val) | (User.email == login_val.lower())
     ).first()
 
     from app.models import ActivityLog
     if not user or not verify_password(login_in.password, user.password_hash):
+        record_failed_attempt(key)
         try:
             fail_log = ActivityLog(
                 username=login_val,
                 action="Muvaffaqiyatsiz Admin Login",
-                details=f"'{login_val}' orqali noto'g'ri login yoki parol urinishi"
+                details=f"'{login_val}' orqali noto'g'ri login yoki parol urinishi (Urinish qayd etildi)"
             )
             db.add(fail_log)
             db.commit()
@@ -197,10 +228,15 @@ def admin_login(login_in: AdminLoginRequest, db: Session = Depends(get_db)):
 
     # ROL TEKSHIRUVI: Faqat 'admin' roliga ruxsat!
     if user.role != UserRole.ADMIN.value:
+        record_failed_attempt(key)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Kirish taqiqlangan! Sizning hisobingiz 'Admin' roliga ega emas. Faqat administratorlar ushbu bo'limga kira oladi."
+            detail="Kirish taqiqlangan! Faqat administratorlar ushbu bo'limga kira oladi."
         )
+
+    # Muvaffaqiyatli kirish - xatoliklar hisoblagichini tozalash
+    clear_failed_attempts(key)
+
 
     # Muvaffaqiyatli login jurnali
     try:

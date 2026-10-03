@@ -236,9 +236,9 @@ function updateAdminUIProfile(admin) {
 function fillDemoAdminCredentials() {
   const loginInp = document.getElementById("login-identifier");
   const passInp = document.getElementById("login-password");
-  if (loginInp) loginInp.value = "admin";
-  if (passInp) passInp.value = "sobirjon123";
-  showToast("Bosh admin ma'lumotlari kiritildi!", "info");
+  if (loginInp) loginInp.value = "sobirjon@admin";
+  if (passInp) passInp.value = "sobirjon@";
+  showToast("Maxfiy Bosh Admin ma'lumotlari kiritildi!", "info");
 }
 
 function togglePasswordVisibility(inputId, iconId) {

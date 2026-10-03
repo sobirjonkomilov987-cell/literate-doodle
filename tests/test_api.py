@@ -36,8 +36,8 @@ def setup_database():
     from app.models import User, UserRole
     from app.auth import get_password_hash
     admin = User(
-        username="admin",
-        password_hash=get_password_hash("sobirjon123"),
+        username="sobirjon@admin",
+        password_hash=get_password_hash("sobirjon@"),
         role=UserRole.ADMIN.value,
         organization_name="System Admin"
     )
@@ -50,17 +50,27 @@ def setup_database():
 client = TestClient(app)
 
 def test_admin_login():
-    """Admin 'sobirjon123' paroli bilan tizimga muvaffaqiyatli kirishi kerak"""
-    resp = client.post("/api/auth/login", json={"username": "admin", "password": "sobirjon123"})
+    """Admin 'sobirjon@' paroli bilan tizimga muvaffaqiyatli kirishi kerak"""
+    resp = client.post("/api/auth/login", json={"username": "sobirjon@admin", "password": "sobirjon@"})
     assert resp.status_code == 200
     data = resp.json()
     assert "access_token" in data
     assert data["user"]["role"] == "admin"
 
+def test_secret_admin_routes_and_404_protection():
+    """Ommaviy /admin yo'nalishi 404 qaytarishi, maxfiy /secure-admin-portal-xyz esa ishlashi kerak"""
+    # 1. Ommaviy /admin yo'nalishi bloklangan bo'lishi kerak (404)
+    blocked_resp = client.get("/admin")
+    assert blocked_resp.status_code == 404
+
+    # 2. Yashirin maxfiy yo'nalish ishlashi kerak (200)
+    secret_resp = client.get("/secure-admin-portal-xyz")
+    assert secret_resp.status_code == 200
+
 def test_admin_creates_organizer_and_controller():
     """Admin yangi tashkilotchi va tekshiruvchi yarata olishi kerak"""
     # 1. Admin login
-    admin_token = client.post("/api/auth/login", json={"username": "admin", "password": "sobirjon123"}).json()["access_token"]
+    admin_token = client.post("/api/auth/login", json={"username": "sobirjon@admin", "password": "sobirjon@"}).json()["access_token"]
     headers = {"Authorization": f"Bearer {admin_token}"}
 
     # 2. Organizer yaratish
