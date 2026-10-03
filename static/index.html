@@ -643,6 +643,34 @@
       </div>
 
       <form onsubmit="handleAuthSubmit(event)" class="space-y-3.5">
+        <!-- ROL TANLASH (Faqat Ro'yxatdan o'tishda) -->
+        <div id="auth-group-role" class="hidden">
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">Hisob turi (Rolingizni tanlang):</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" id="role-choice-customer" onclick="selectRegisterRole('customer')" 
+              class="p-2.5 rounded-xl border border-indigo-500 bg-indigo-600/20 text-white flex items-center gap-2.5 transition text-left cursor-pointer">
+              <div class="w-8 h-8 rounded-lg bg-indigo-500/30 text-indigo-400 flex items-center justify-center flex-shrink-0">
+                <i data-lucide="user" class="w-4 h-4"></i>
+              </div>
+              <div>
+                <div class="text-xs font-bold leading-tight">Mijoz (Client)</div>
+                <div class="text-[10px] text-slate-400">Chipta xarid qilish</div>
+              </div>
+            </button>
+            <button type="button" id="role-choice-controller" onclick="selectRegisterRole('controller')" 
+              class="p-2.5 rounded-xl border border-slate-700 bg-slate-900/60 text-slate-400 hover:text-white flex items-center gap-2.5 transition text-left cursor-pointer">
+              <div class="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center flex-shrink-0">
+                <i data-lucide="scan-line" class="w-4 h-4"></i>
+              </div>
+              <div>
+                <div class="text-xs font-bold leading-tight">Tekshiruvchi</div>
+                <div class="text-[10px] text-slate-400">Chipta tekshirish</div>
+              </div>
+            </button>
+          </div>
+          <input type="hidden" id="auth-role" value="customer">
+        </div>
+
         <!-- ISMI (Faqat Ro'yxatdan o'tishda) -->
         <div id="auth-group-name" class="hidden">
           <label class="block text-xs font-semibold text-slate-300 mb-1">To'liq ismingiz</label>
@@ -680,13 +708,16 @@
             </div>
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1">Email (ixtiyoriy)</label>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Email (elektron pochta)</label>
             <div class="relative">
               <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
                 <i data-lucide="mail" class="w-3.5 h-3.5"></i>
               </span>
-              <input id="auth-email" type="email" placeholder="user@gmail.com" 
-                class="w-full glass-input rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-slate-500">
+              <input id="auth-email" type="email" placeholder="foydalanuvchi@mail.uz" oninput="handleEmailInput(this.value)"
+                class="w-full glass-input rounded-xl pl-9 pr-8 py-2.5 text-xs text-white placeholder-slate-500">
+              <span id="email-feedback-icon" class="absolute inset-y-0 right-0 flex items-center pr-2.5 hidden">
+                <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-400"></i>
+              </span>
             </div>
           </div>
         </div>
@@ -698,11 +729,25 @@
             <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
               <i data-lucide="lock" class="w-4 h-4"></i>
             </span>
-            <input id="auth-password" type="password" required placeholder="••••••••" 
+            <input id="auth-password" type="password" required placeholder="••••••••" oninput="handlePasswordStrengthInput(this.value)"
               class="w-full glass-input rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder-slate-500">
-            <button type="button" onclick="togglePasswordVisibility('auth-password', 'eye-auth-pass')" class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-white">
+            <button type="button" onclick="togglePasswordVisibility('auth-password', 'eye-auth-pass')" class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-white cursor-pointer">
               <i id="eye-auth-pass" data-lucide="eye" class="w-4 h-4"></i>
             </button>
+          </div>
+
+          <!-- PAROL MUSTAHKAMLIGI KO'RSATKICHI (Faqat Ro'yxatdan o'tishda) -->
+          <div id="auth-password-strength" class="hidden mt-2 space-y-1">
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="text-slate-400">Parol mustahkamligi:</span>
+              <span id="strength-label" class="font-bold text-slate-400">Kiritilmagan</span>
+            </div>
+            <div class="grid grid-cols-3 gap-1.5 h-1.5 w-full">
+              <div id="strength-bar-1" class="h-full rounded-full bg-slate-800 transition-colors duration-300"></div>
+              <div id="strength-bar-2" class="h-full rounded-full bg-slate-800 transition-colors duration-300"></div>
+              <div id="strength-bar-3" class="h-full rounded-full bg-slate-800 transition-colors duration-300"></div>
+            </div>
+            <p id="strength-hint" class="text-[10px] text-slate-500">Maslahat: Kamida 8 ta belgi, raqam va maxsus belgilardan foydalaning.</p>
           </div>
         </div>
 
@@ -713,12 +758,14 @@
             <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
               <i data-lucide="shield-check" class="w-4 h-4"></i>
             </span>
-            <input id="auth-confirm-password" type="password" placeholder="••••••••" 
+            <input id="auth-confirm-password" type="password" placeholder="••••••••" oninput="handlePasswordMatchInput(this.value)"
               class="w-full glass-input rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder-slate-500">
-            <button type="button" onclick="togglePasswordVisibility('auth-confirm-password', 'eye-auth-confirm')" class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-white">
+            <button type="button" onclick="togglePasswordVisibility('auth-confirm-password', 'eye-auth-confirm')" class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-white cursor-pointer">
               <i id="eye-auth-confirm" data-lucide="eye" class="w-4 h-4"></i>
             </button>
           </div>
+          <!-- PAROLLAR MOSLIGI XABARI -->
+          <div id="auth-match-feedback" class="hidden text-[11px] mt-1.5 flex items-center gap-1.5 font-medium"></div>
         </div>
 
         <button id="auth-submit-btn" type="submit" class="btn-premium-gradient w-full py-3.5 rounded-xl font-bold text-white text-sm shadow-lg flex items-center justify-center gap-2 mt-2">

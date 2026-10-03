@@ -223,6 +223,120 @@ function togglePasswordVisibility(inputId, iconId) {
   if (window.lucide) lucide.createIcons();
 }
 
+function selectRegisterRole(role) {
+  const roleInput = document.getElementById("auth-role");
+  const custBtn = document.getElementById("role-choice-customer");
+  const ctrlBtn = document.getElementById("role-choice-controller");
+  if (roleInput) roleInput.value = role;
+
+  if (role === 'controller') {
+    if (ctrlBtn) {
+      ctrlBtn.className = "p-2.5 rounded-xl border border-purple-500 bg-purple-600/20 text-white flex items-center gap-2.5 transition text-left cursor-pointer";
+    }
+    if (custBtn) {
+      custBtn.className = "p-2.5 rounded-xl border border-slate-700 bg-slate-900/60 text-slate-400 hover:text-white flex items-center gap-2.5 transition text-left cursor-pointer";
+    }
+  } else {
+    if (custBtn) {
+      custBtn.className = "p-2.5 rounded-xl border border-indigo-500 bg-indigo-600/20 text-white flex items-center gap-2.5 transition text-left cursor-pointer";
+    }
+    if (ctrlBtn) {
+      ctrlBtn.className = "p-2.5 rounded-xl border border-slate-700 bg-slate-900/60 text-slate-400 hover:text-white flex items-center gap-2.5 transition text-left cursor-pointer";
+    }
+  }
+}
+
+function handleEmailInput(email) {
+  const icon = document.getElementById("email-feedback-icon");
+  if (!icon) return;
+  const trimmed = email.trim();
+  if (!trimmed) {
+    icon.classList.add("hidden");
+    return;
+  }
+  const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
+  if (isValid) {
+    icon.classList.remove("hidden");
+  } else {
+    icon.classList.add("hidden");
+  }
+}
+
+function handlePasswordStrengthInput(val) {
+  const bar1 = document.getElementById("strength-bar-1");
+  const bar2 = document.getElementById("strength-bar-2");
+  const bar3 = document.getElementById("strength-bar-3");
+  const label = document.getElementById("strength-label");
+  const hint = document.getElementById("strength-hint");
+
+  // Re-check confirm password match if it has value
+  const confirmVal = document.getElementById("auth-confirm-password")?.value || "";
+  if (confirmVal) handlePasswordMatchInput(confirmVal);
+
+  if (!bar1 || !label) return;
+
+  if (!val) {
+    label.textContent = "Kiritilmagan";
+    label.className = "font-bold text-slate-400";
+    bar1.className = "h-full rounded-full bg-slate-800 transition-colors duration-300";
+    bar2.className = "h-full rounded-full bg-slate-800 transition-colors duration-300";
+    bar3.className = "h-full rounded-full bg-slate-800 transition-colors duration-300";
+    if (hint) hint.textContent = "Maslahat: Kamida 8 ta belgi, raqam va maxsus belgilardan foydalaning.";
+    return;
+  }
+
+  let score = 0;
+  if (val.length >= 6) score++;
+  if (val.length >= 8) score++;
+  if (/[0-9]/.test(val)) score++;
+  if (/[A-Z]/.test(val) || /[^A-Za-z0-9]/.test(val)) score++;
+
+  if (score <= 1) {
+    label.textContent = "Zaif (Weak)";
+    label.className = "font-bold text-rose-400";
+    bar1.className = "h-full rounded-full bg-rose-500 transition-colors duration-300";
+    bar2.className = "h-full rounded-full bg-slate-800 transition-colors duration-300";
+    bar3.className = "h-full rounded-full bg-slate-800 transition-colors duration-300";
+    if (hint) hint.textContent = "Parolni uzaytiring va raqamlar qo'shing.";
+  } else if (score === 2 || score === 3) {
+    label.textContent = "O'rtacha (Medium)";
+    label.className = "font-bold text-amber-400";
+    bar1.className = "h-full rounded-full bg-amber-500 transition-colors duration-300";
+    bar2.className = "h-full rounded-full bg-amber-500 transition-colors duration-300";
+    bar3.className = "h-full rounded-full bg-slate-800 transition-colors duration-300";
+    if (hint) hint.textContent = "Yaxshi! Maxsus belgilar (@, #, !) qo'shib yanada kuchaytiring.";
+  } else {
+    label.textContent = "Kuchli (Strong)";
+    label.className = "font-bold text-emerald-400";
+    bar1.className = "h-full rounded-full bg-emerald-500 transition-colors duration-300";
+    bar2.className = "h-full rounded-full bg-emerald-500 transition-colors duration-300";
+    bar3.className = "h-full rounded-full bg-emerald-500 transition-colors duration-300";
+    if (hint) hint.textContent = "Mukammal! Kuchli va ishonchli parol.";
+  }
+}
+
+function handlePasswordMatchInput(confirmVal) {
+  const matchBox = document.getElementById("auth-match-feedback");
+  const mainPass = document.getElementById("auth-password")?.value || "";
+  if (!matchBox) return;
+
+  if (!confirmVal) {
+    matchBox.classList.add("hidden");
+    matchBox.innerHTML = "";
+    return;
+  }
+
+  matchBox.classList.remove("hidden");
+  if (confirmVal === mainPass) {
+    matchBox.className = "text-[11px] mt-1.5 flex items-center gap-1.5 font-medium text-emerald-400";
+    matchBox.innerHTML = `<i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-400"></i><span>Parollar bir-biriga mos keldi!</span>`;
+  } else {
+    matchBox.className = "text-[11px] mt-1.5 flex items-center gap-1.5 font-medium text-rose-400";
+    matchBox.innerHTML = `<i data-lucide="alert-circle" class="w-3.5 h-3.5 text-rose-400"></i><span>Parollar mos kelmadi</span>`;
+  }
+  if (window.lucide) lucide.createIcons();
+}
+
 function switchAuthTab(mode) {
   isRegisterMode = (mode === 'register');
   const tabLogin = document.getElementById("auth-tab-login");
@@ -231,9 +345,12 @@ function switchAuthTab(mode) {
   const sub = document.getElementById("auth-modal-subtitle");
   const submitText = document.getElementById("auth-submit-text");
   const submitIcon = document.getElementById("auth-submit-icon");
+  const groupRole = document.getElementById("auth-group-role");
   const groupName = document.getElementById("auth-group-name");
   const groupContact = document.getElementById("auth-group-contact");
   const groupConfirm = document.getElementById("auth-group-confirm");
+  const strengthBox = document.getElementById("auth-password-strength");
+  const matchBox = document.getElementById("auth-match-feedback");
   const confirmInput = document.getElementById("auth-confirm-password");
 
   if (isRegisterMode) {
@@ -244,13 +361,15 @@ function switchAuthTab(mode) {
       tabRegister.className = "flex-1 py-2.5 rounded-xl font-bold text-sm transition bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2";
     }
     if (title) title.textContent = "Ro'yxatdan O'tish";
-    if (sub) sub.textContent = "Yangi hisob oching va chiptalarni oson xarid qiling";
+    if (sub) sub.textContent = "ChiptaPro platformasiga xush kelibsiz! Yangi hisob yarating";
     if (submitText) submitText.textContent = "Ro'yxatdan O'tish va Kirish";
     if (submitIcon) submitIcon.className = "fa-solid fa-user-plus";
 
+    if (groupRole) groupRole.classList.remove("hidden");
     if (groupName) groupName.classList.remove("hidden");
     if (groupContact) groupContact.classList.remove("hidden");
     if (groupConfirm) groupConfirm.classList.remove("hidden");
+    if (strengthBox) strengthBox.classList.remove("hidden");
     if (confirmInput) confirmInput.required = true;
   } else {
     if (tabLogin) {
@@ -264,9 +383,15 @@ function switchAuthTab(mode) {
     if (submitText) submitText.textContent = "Kirish";
     if (submitIcon) submitIcon.className = "fa-solid fa-right-to-bracket";
 
+    if (groupRole) groupRole.classList.add("hidden");
     if (groupName) groupName.classList.add("hidden");
     if (groupContact) groupContact.classList.add("hidden");
     if (groupConfirm) groupConfirm.classList.add("hidden");
+    if (strengthBox) strengthBox.classList.add("hidden");
+    if (matchBox) {
+      matchBox.classList.add("hidden");
+      matchBox.innerHTML = "";
+    }
     if (confirmInput) {
       confirmInput.required = false;
       confirmInput.value = "";
@@ -360,6 +485,7 @@ async function handleAuthSubmit(e) {
       const name = (document.getElementById("auth-name")?.value || "").trim();
       const phone = (document.getElementById("auth-phone")?.value || "").trim();
       const email = (document.getElementById("auth-email")?.value || "").trim();
+      const role = (document.getElementById("auth-role")?.value || "customer").trim();
       const confirmPassword = (document.getElementById("auth-confirm-password")?.value || "").trim();
 
       if (password !== confirmPassword) {
@@ -384,6 +510,7 @@ async function handleAuthSubmit(e) {
         name: name || undefined,
         phone: phone || undefined,
         email: email || undefined,
+        role: role,
         confirm_password: confirmPassword
       };
 

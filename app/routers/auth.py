@@ -71,14 +71,17 @@ def register_customer(user_in: UserCreate, db: Session = Depends(get_db)):
                 detail="Ushbu email manzili boshqa hisob tomonidan band qilingan."
             )
 
-    # Yangi mijoz yaratish
+    # Yangi foydalanuvchi yaratish (Mijoz yoki Tekshiruvchi)
+    allowed_roles = [UserRole.CUSTOMER.value, UserRole.CONTROLLER.value]
+    chosen_role = user_in.role if user_in.role in allowed_roles else UserRole.CUSTOMER.value
+
     new_user = User(
         name=user_in.name.strip() if user_in.name else username_clean,
         username=username_clean,
         email=email_clean,
         phone=user_in.phone.strip() if user_in.phone else None,
         password_hash=get_password_hash(user_in.password),
-        role=UserRole.CUSTOMER.value,
+        role=chosen_role,
         organization_name=None
     )
     db.add(new_user)
@@ -86,12 +89,13 @@ def register_customer(user_in: UserCreate, db: Session = Depends(get_db)):
     db.refresh(new_user)
 
     # Audit log
+    role_name = "Chipta Tekshiruvchi" if chosen_role == UserRole.CONTROLLER.value else "Mijoz"
     log_activity(
         db=db,
         user_id=new_user.id,
         username=new_user.username,
         action="Yangi Ro'yxatdan O'tish",
-        details=f"Yangi mijoz '{new_user.username}' tizimda muvaffaqiyatli ro'yxatdan o'tdi."
+        details=f"Yangi {role_name} '{new_user.username}' tizimda muvaffaqiyatli ro'yxatdan o'tdi."
     )
 
     return new_user
