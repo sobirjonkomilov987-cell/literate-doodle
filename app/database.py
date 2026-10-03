@@ -3,6 +3,9 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 from app.config import settings
 
 db_url = settings.DATABASE_URL
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+
 connect_args = {}
 if db_url.startswith("sqlite"):
     connect_args = {"check_same_thread": False}
@@ -37,6 +40,8 @@ def migrate_database():
     # 2. Users jadvali ustunlarini tekshirish va qo'shish
     if "users" in existing_tables:
         columns = [c["name"] for c in inspector.get_columns("users")]
+        is_sqlite = db_url.startswith("sqlite")
+        dt_type = "DATETIME" if is_sqlite else "TIMESTAMP"
         with engine.begin() as conn:
             if "name" not in columns:
                 conn.execute(text("ALTER TABLE users ADD COLUMN name VARCHAR(255)"))
@@ -47,7 +52,7 @@ def migrate_database():
             if "avatar" not in columns:
                 conn.execute(text("ALTER TABLE users ADD COLUMN avatar TEXT"))
             if "updated_at" not in columns:
-                conn.execute(text("ALTER TABLE users ADD COLUMN updated_at DATETIME"))
+                conn.execute(text(f"ALTER TABLE users ADD COLUMN updated_at {dt_type}"))
                 
     # 3. Seats jadvalida version (concurrency) ustunini tekshirish va qo'shish
     if "seats" in existing_tables:
