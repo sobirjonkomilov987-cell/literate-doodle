@@ -14,7 +14,8 @@ if __name__ == "__main__":
     print("=" * 60)
     print("Vebsayt manzili:  http://127.0.0.1:8000")
     print("OpenAPI Swagger:  http://127.0.0.1:8000/docs")
-    print("Bosh Admin login: admin / sobirjon123")
+    print("Maxfiy Admin:     http://127.0.0.1:8000/secure-admin-portal-xyz")
+    print("Bosh Admin login: sobirjon@admin / sobirjon@")
     print("=" * 60)
     
     # Uvicorn serverini ishga tushirish
