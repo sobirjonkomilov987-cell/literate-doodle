@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="uz" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AdminPro - Professional Boshqaruv & Autentifikatsiya Portali</title>
+  
+  <!-- GOOGLE FONTS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- TAILWIND CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            },
+            darkBg: '#090d16',
+            darkCard: '#111827',
+            lightBg: '#f8fafc',
+            lightCard: '#ffffff'
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- LUCIDE ICONS CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- CHART.JS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.2);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.4);
+    }
+
+    /* Glassmorphism Classes */
+    .glass-panel {
+      background: rgba(17, 24, 39, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .light .glass-panel {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+    }
+
+    .glass-input {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.2s ease;
+    }
+    .glass-input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+    .light .glass-input {
+      background: rgba(241, 245, 249, 0.7);
+      border: 1px solid #cbd5e1;
+    }
+
+    /* 3D Card Hover & Glow */
+    .glow-card {
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+    }
+    .glow-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 20px 35px -10px rgba(99, 102, 241, 0.15);
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.6; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.05); }
+    }
+    .pulse-glow {
+      animation: pulseGlow 4s infinite ease-in-out;
+    }
+
+    /* Shake animation for error */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+    .shake {
+      animation: shake 0.4s ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-darkBg text-slate-100 min-h-screen font-sans antialiased selection:bg-brand-500 selection:text-white transition-colors duration-300">
+
+  <!-- BACKGROUND GLOW EFFECTS -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+    <div class="absolute -top-40 -left-40 w-96 h-96 bg-brand-600/15 rounded-full blur-[120px] pulse-glow"></div>
+    <div class="absolute top-1/2 -right-40 w-96 h-96 bg-purple-600/15 rounded-full blur-[130px] pulse-glow" style="animation-delay: 2s;"></div>
+    <div class="absolute -bottom-40 left-1/3 w-96 h-96 bg-emerald-600/10 rounded-full blur-[140px] pulse-glow" style="animation-delay: 1s;"></div>
+  </div>
+
+  <!-- TOAST NOTIFICATIONS WRAPPER -->
+  <div id="toast-container" class="fixed top-5 right-5 z-[9999] flex flex-col gap-3 pointer-events-none max-w-sm w-full"></div>
+
+  <!-- ========================================================================= -->
+  <!-- 1. AUTH VIEWS WRAPPER (LOGIN, REGISTER, FORGOT PASSWORD)                 -->
+  <!-- ========================================================================= -->
+  <div id="auth-views-wrapper" class="relative z-10 flex min-h-screen items-center justify-center p-4">
+    
+    <!-- A. ADMIN LOGIN CARD -->
+    <div id="view-admin-login" class="w-full max-w-md glass-panel rounded-3xl p-8 shadow-2xl relative transition-all duration-300">
+      
+      <!-- Top Branding -->
+      <div class="text-center mb-8">
+        <div class="inline-flex p-3 rounded-2xl bg-gradient-to-tr from-brand-600 to-purple-600 shadow-xl shadow-brand-500/25 mb-4 text-white">
+          <i data-lucide="shield-check" class="w-8 h-8"></i>
+        </div>
+        <h1 class="text-2xl font-extrabold text-white tracking-tight">Admin Portaliga Kirish</h1>
+        <p class="text-xs text-slate-400 mt-1.5">Tizimni xavfsiz boshqarish uchun shaxsiy hisobingizga kiring</p>
+      </div>
+
+      <!-- Quick Demo Login Hint -->
+      <div class="mb-6 p-3 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 flex items-center justify-between text-xs">
+        <div>
+          <span class="text-indigo-300 font-semibold block">👑 Bosh Admin Hisobi:</span>
+          <span class="text-slate-400 font-mono text-[11px]">admin / sobirjon123</span>
+        </div>
+        <button onclick="fillDemoAdminCredentials()" class="px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[11px] transition shadow">
+          Avto-to'ldirish
+        </button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="form-admin-login" onsubmit="handleAdminLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">Email yoki Username</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+              <i data-lucide="user" class="w-4 h-4"></i>
+            </span>
+            <input type="text" id="login-identifier" required placeholder="admin yoki admin@tadbirchipta.uz" 
+              class="w-full glass-input rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-slate-500 outline-none">
+          </div>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-xs font-semibold text-slate-300">Parol</label>
+            <button type="button" onclick="openForgotPasswordModal()" class="text-[11px] text-brand-500 hover:text-brand-400 font-medium hover:underline">
+              Parolni unutdingizmi?
+            </button>
+          </div>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+              <i data-lucide="lock" class="w-4 h-4"></i>
+            </span>
+            <input type="password" id="login-password" required placeholder="••••••••" 
+              class="w-full glass-input rounded-xl pl-10 pr-10 py-3 text-sm text-white placeholder-slate-500 outline-none">
+            <button type="button" onclick="togglePasswordVisibility('login-password', 'eye-login')" class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-white">
+              <i id="eye-login" data-lucide="eye" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" id="btn-login-submit" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 font-bold text-sm text-white shadow-lg shadow-brand-600/30 transition flex items-center justify-center gap-2 mt-2">
+          <span>Kirish</span>
+          <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </button>
+      </form>
+
+      <!-- Switch to Register -->
+      <div class="mt-8 pt-6 border-t border-slate-800/80 text-center">
+        <p class="text-xs text-slate-400">
+          Admin hisobingiz yo'qmi? 
+          <button onclick="switchAuthView('register')" class="text-brand-400 hover:text-brand-300 font-bold ml-1 hover:underline">
+            Admin sifatida ro'yxatdan o'tish
+          </button>
+        </p>
+        <div class="mt-4">
+          <a href="/" class="text-xs text-slate-500 hover:text-slate-300 transition flex items-center justify-center gap-1">
+            <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Asosiy Tadbirlar Saytiga Qaytish
+          </a>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- B. ADMIN REGISTER CARD -->
+    <div id="view-admin-register" class="hidden w-full max-w-lg glass-panel rounded-3xl p-8 shadow-2xl relative transition-all duration-300 my-8">
+      
+      <!-- Top Branding -->
+      <div class="text-center mb-6">
+        <div class="inline-flex p-3 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 shadow-xl shadow-emerald-500/25 mb-3 text-white">
+          <i data-lucide="user-plus" class="w-8 h-8"></i>
+        </div>
+        <h1 class="text-2xl font-extrabold text-white tracking-tight">Admin Ro'yxatdan O'tish</h1>
+        <p class="text-xs text-slate-400 mt-1">Yangi administrator hisobini yaratish va to'liq vakolatlarni olish</p>
+      </div>
+
+      <!-- Registration Form with Live Validation -->
+      <form id="form-admin-register" onsubmit="handleAdminRegister(event)" class="space-y-3.5">
+        
+        <!-- Ism va Familiya -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Ism va Familiya</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+              <i data-lucide="badge-check" class="w-4 h-4"></i>
+            </span>
+            <input type="text" id="reg-name" required placeholder="Masalan: Sobirjon Qodirov" 
+              class="w-full glass-input rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none">
+          </div>
+        </div>
+
+        <!-- Username & Phone in 2 Cols -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Username (Login)</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+                <i data-lucide="at-sign" class="w-4 h-4"></i>
+              </span>
+              <input type="text" id="reg-username" required placeholder="admin_sobirjon" 
+                class="w-full glass-input rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none">
+            </div>
+            <span id="reg-username-error" class="text-[11px] text-red-400 hidden mt-0.5"></span>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Telefon Raqami</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+                <i data-lucide="phone" class="w-4 h-4"></i>
+              </span>
+              <input type="text" id="reg-phone" required placeholder="+998 90 123 45 67" 
+                class="w-full glass-input rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none">
+            </div>
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Email Manzili</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+              <i data-lucide="mail" class="w-4 h-4"></i>
+            </span>
+            <input type="email" id="reg-email" required placeholder="admin@tizim.uz" 
+              class="w-full glass-input rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none">
+          </div>
+          <span id="reg-email-error" class="text-[11px] text-red-400 hidden mt-0.5">Email formati noto'g'ri</span>
+        </div>
+
+        <!-- Password & Confirm Password in 2 Cols -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Parol (Kamida 8 ta)</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+                <i data-lucide="lock" class="w-4 h-4"></i>
+              </span>
+              <input type="password" id="reg-password" required placeholder="Kamida 8 ta belgi" 
+                class="w-full glass-input rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none"
+                oninput="checkPasswordStrength(this.value)">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Parolni Tasdiqlash</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+                <i data-lucide="check-check" class="w-4 h-4"></i>
+              </span>
+              <input type="password" id="reg-confirm-password" required placeholder="Qayta kiriting" 
+                class="w-full glass-input rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none"
+                oninput="validatePasswordMatch()">
+            </div>
+          </div>
+        </div>
+
+        <!-- Password Strength Meter -->
+        <div class="space-y-1">
+          <div class="flex items-center justify-between text-[11px] text-slate-400">
+            <span>Parol mustahkamligi:</span>
+            <span id="strength-label" class="font-bold">Kutilmoqda...</span>
+          </div>
+          <div class="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+            <div id="strength-bar" class="h-full w-0 bg-red-500 transition-all duration-300"></div>
+          </div>
+          <span id="pass-match-error" class="text-[11px] text-red-400 hidden">Parollar mos kelmadi!</span>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" id="btn-register-submit" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 hover:from-emerald-500 hover:to-indigo-500 font-extrabold text-sm text-white shadow-lg shadow-emerald-600/30 transition flex items-center justify-center gap-2 mt-4">
+          <i data-lucide="shield-plus" class="w-4 h-4"></i>
+          <span>Admin Sifatida Ro'yxatdan O'tish</span>
+        </button>
+      </form>
+
+      <!-- Switch to Login -->
+      <div class="mt-6 pt-5 border-t border-slate-800/80 text-center">
+        <p class="text-xs text-slate-400">
+          Hisobingiz bormi? 
+          <button onclick="switchAuthView('login')" class="text-brand-400 hover:text-brand-300 font-bold ml-1 hover:underline">
+            Tizimga kirish
+          </button>
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- 2. FORGOT PASSWORD MODAL                                                  -->
+  <!-- ========================================================================= -->
+  <div id="modal-forgot-password" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="glass-panel max-w-md w-full rounded-3xl p-6 sm:p-8 shadow-2xl relative">
+      <button onclick="closeForgotPasswordModal()" class="absolute top-5 right-5 text-slate-400 hover:text-white">
+        <i data-lucide="x" class="w-6 h-6"></i>
+      </button>
+
+      <div class="text-center mb-6">
+        <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-3 border border-amber-500/30">
+          <i data-lucide="key-round" class="w-6 h-6"></i>
+        </div>
+        <h3 class="text-xl font-bold text-white">Parolni Qayta Tiklash</h3>
+        <p class="text-xs text-slate-400 mt-1">Admin hisobingiz uchun yangi xavfsiz parol o'rnating</p>
+      </div>
+
+      <form onsubmit="handleForgotPasswordSubmit(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Email yoki Username</label>
+          <input type="text" id="forgot-login" required placeholder="admin yoki admin@tadbirchipta.uz" 
+            class="w-full glass-input rounded-xl px-4 py-2.5 text-sm text-white outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Yangi Parol (Kamida 8 ta)</label>
+          <input type="password" id="forgot-new-password" required placeholder="Yangi parol kiriting" 
+            class="w-full glass-input rounded-xl px-4 py-2.5 text-sm text-white outline-none">
+        </div>
+        <button type="submit" class="w-full py-3 bg-brand-600 hover:bg-brand-500 font-bold rounded-xl text-white text-sm shadow-lg shadow-brand-600/30 transition">
+          Parolni Yangilash
+        </button>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- 3. ADMIN APPLICATION SUITE (SIDEBAR + MAIN DASHBOARD + VIEWS)             -->
+  <!-- ========================================================================= -->
+  <div id="admin-app-container" class="hidden relative z-10 min-h-screen flex flex-col md:flex-row">
+    
+    <!-- SIDEBAR -->
+    <aside id="admin-sidebar" class="w-full md:w-64 glass-panel border-r border-slate-800/80 flex flex-col md:min-h-screen transition-all duration-300">
+      
+      <!-- Sidebar Brand Header -->
+      <div class="p-6 border-b border-slate-800/80 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 p-0.5 shadow-lg shadow-brand-500/30 flex items-center justify-center">
+            <div class="w-full h-full bg-darkBg rounded-[14px] flex items-center justify-center">
+              <i data-lucide="shield" class="w-5 h-5 text-brand-400"></i>
+            </div>
+          </div>
+          <div>
+            <span class="text-lg font-extrabold tracking-tight bg-gradient-to-r from-white via-indigo-200 to-brand-400 bg-clip-text text-transparent">
+              Admin<span class="text-brand-400">Pro</span>
+            </span>
+            <span class="flex items-center gap-1.5 text-[10px] text-emerald-400 font-semibold uppercase tracking-wider">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Live Tizim
+            </span>
+          </div>
+        </div>
+
+        <!-- Mobile menu toggle -->
+        <button onclick="toggleMobileSidebar()" class="md:hidden text-slate-400 hover:text-white p-2">
+          <i data-lucide="menu" class="w-6 h-6"></i>
+        </button>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
+        <button onclick="navigateToView('dashboard')" id="nav-item-dashboard" class="w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-semibold transition text-white bg-brand-600 shadow-lg shadow-brand-600/30">
+          <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+          <span>Dashboard</span>
+        </button>
+
+        <button onclick="navigateToView('users')" id="nav-item-users" class="w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-semibold transition text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <i data-lucide="users" class="w-5 h-5"></i>
+          <span>Foydalanuvchilar</span>
+        </button>
+
+        <button onclick="navigateToView('activities')" id="nav-item-activities" class="w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-semibold transition text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <i data-lucide="activity" class="w-5 h-5"></i>
+          <span>Audit Logi</span>
+        </button>
+
+        <button onclick="navigateToView('profile')" id="nav-item-profile" class="w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-semibold transition text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <i data-lucide="user-cog" class="w-5 h-5"></i>
+          <span>Profil & Xavfsizlik</span>
+        </button>
+
+        <div class="pt-4 mt-4 border-t border-slate-800/80">
+          <a href="/" target="_blank" class="w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 transition">
+            <i data-lucide="external-link" class="w-5 h-5 text-indigo-400"></i>
+            <span>Tadbir Vitrinasi</span>
+          </a>
+        </div>
+      </nav>
+
+      <!-- Sidebar User Footer -->
+      <div class="p-4 border-t border-slate-800/80">
+        <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-900/80 border border-slate-800">
+          <div class="flex items-center gap-3 overflow-hidden cursor-pointer" onclick="navigateToView('profile')">
+            <img id="sidebar-user-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=admin" class="w-9 h-9 rounded-xl border border-brand-500/40 bg-slate-800 flex-shrink-0" alt="Avatar">
+            <div class="overflow-hidden">
+              <div id="sidebar-user-name" class="text-xs font-bold text-white truncate">Administrator</div>
+              <div id="sidebar-user-role" class="text-[10px] text-brand-400 uppercase font-semibold tracking-wider">ADMIN</div>
+            </div>
+          </div>
+          <button onclick="handleAdminLogout()" class="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition" title="Chiqish">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- MAIN VIEWPORT -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+      
+      <!-- TOP NAVIGATION BAR -->
+      <header class="glass-panel border-b border-slate-800/80 sticky top-0 z-30 px-6 py-4 flex items-center justify-between">
+        
+        <div class="flex items-center gap-4">
+          <button onclick="toggleMobileSidebar()" class="md:hidden text-slate-400 hover:text-white">
+            <i data-lucide="menu" class="w-6 h-6"></i>
+          </button>
+          <div>
+            <h2 id="page-header-title" class="text-lg font-extrabold text-white">Umumiy Dashboard</h2>
+            <p id="page-header-sub" class="text-xs text-slate-400 hidden sm:block">Tizim holati va real-vaqt tahlillari</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          
+          <!-- DARK / LIGHT MODE TOGGLE -->
+          <button onclick="toggleTheme()" class="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white border border-slate-700 transition" title="Mavzuni almashtirish">
+            <i id="theme-icon" data-lucide="sun" class="w-4 h-4"></i>
+          </button>
+
+          <!-- NOTIFICATION BELL & DROPDOWN -->
+          <div class="relative">
+            <button onclick="toggleNotificationDropdown()" class="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white border border-slate-700 transition relative">
+              <i data-lucide="bell" class="w-4 h-4"></i>
+              <span id="unread-notif-badge" class="absolute -top-1 -right-1 w-5 h-5 bg-brand-600 text-white rounded-full text-[10px] font-bold flex items-center justify-center border-2 border-darkBg hidden">0</span>
+            </button>
+
+            <!-- Notification Dropdown Panel -->
+            <div id="notification-dropdown" class="hidden absolute right-0 mt-3 w-80 sm:w-96 glass-panel rounded-2xl shadow-2xl p-4 border border-slate-700 z-50">
+              <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                <span class="text-xs font-bold text-white uppercase tracking-wider">Bildirishnomalar</span>
+                <button onclick="markAllNotificationsAsRead()" class="text-[11px] text-brand-400 hover:underline">
+                  Barchasini o'qildi deb belgilash
+                </button>
+              </div>
+              <div id="notifications-list" class="max-h-72 overflow-y-auto divide-y divide-slate-800/60 text-xs py-2">
+                <!-- Injected via JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- ADMIN QUICK PILL -->
+          <div class="hidden sm:flex items-center gap-2.5 pl-3 border-l border-slate-800">
+            <img id="topbar-user-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=admin" class="w-8 h-8 rounded-xl border border-brand-500/40" alt="Avatar">
+            <span id="topbar-user-name" class="text-xs font-bold text-white">admin</span>
+          </div>
+
+        </div>
+
+      </header>
+
+      <!-- VIEW PANELS CONTAINER -->
+      <main class="p-6 md:p-8 space-y-8 flex-1">
+        
+        <!-- ============================================== -->
+        <!-- VIEW 1: DASHBOARD OVERVIEW                     -->
+        <!-- ============================================== -->
+        <section id="panel-dashboard" class="admin-view space-y-8">
+          
+          <!-- WELCOME BANNER -->
+          <div class="relative overflow-hidden rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-brand-900/60 via-indigo-900/40 to-purple-900/40 border border-brand-500/30 shadow-2xl">
+            <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/20 text-brand-300 text-xs font-bold mb-3 border border-brand-500/30">
+                  <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Xavfsiz Boshqaruv Markazi
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-white">Xush kelibsiz, <span id="dash-greeting-name">Administrator</span>! 👋</h1>
+                <p class="text-slate-300 text-xs sm:text-sm mt-1 max-w-xl">Barcha modellar, xavfsizlik loglari, ro'yxatdan o'tgan foydalanuvchilar va buyurtmalar to'liq nazorat ostida.</p>
+              </div>
+              <div class="flex items-center gap-3">
+                <button onclick="refreshDashboardData()" class="px-4 py-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-xs font-bold text-white transition flex items-center gap-2 shadow">
+                  <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Yangilash
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4 STAT METRICS CARDS -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            
+            <!-- 1. USERS COUNT -->
+            <div class="glow-card glass-panel p-6 rounded-3xl relative overflow-hidden border border-slate-800/80">
+              <div class="flex items-center justify-between mb-4">
+                <span class="text-xs uppercase font-bold text-slate-400 tracking-wider">Foydalanuvchilar</span>
+                <div class="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center border border-indigo-500/20">
+                  <i data-lucide="users" class="w-5 h-5"></i>
+                </div>
+              </div>
+              <div id="stat-total-users" class="text-3xl font-black text-white">0</div>
+              <div class="flex items-center gap-1.5 text-xs text-emerald-400 mt-2 font-medium">
+                <i data-lucide="trending-up" class="w-3.5 h-3.5"></i> +12% o'sish bu oyda
+              </div>
+            </div>
+
+            <!-- 2. ORDERS / TICKETS -->
+            <div class="glow-card glass-panel p-6 rounded-3xl relative overflow-hidden border border-slate-800/80">
+              <div class="flex items-center justify-between mb-4">
+                <span class="text-xs uppercase font-bold text-slate-400 tracking-wider">Buyurtmalar</span>
+                <div class="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center border border-purple-500/20">
+                  <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+                </div>
+              </div>
+              <div id="stat-total-orders" class="text-3xl font-black text-white">0</div>
+              <div class="flex items-center gap-1.5 text-xs text-purple-400 mt-2 font-medium">
+                <i data-lucide="ticket" class="w-3.5 h-3.5"></i> Chiptalar & rezervatsiyalar
+              </div>
+            </div>
+
+            <!-- 3. PRODUCTS / EVENTS -->
+            <div class="glow-card glass-panel p-6 rounded-3xl relative overflow-hidden border border-slate-800/80">
+              <div class="flex items-center justify-between mb-4">
+                <span class="text-xs uppercase font-bold text-slate-400 tracking-wider">Mahsulotlar</span>
+                <div class="w-10 h-10 rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center border border-blue-500/20">
+                  <i data-lucide="layers" class="w-5 h-5"></i>
+                </div>
+              </div>
+              <div id="stat-total-products" class="text-3xl font-black text-white">0</div>
+              <div class="flex items-center gap-1.5 text-xs text-blue-400 mt-2 font-medium">
+                <i data-lucide="calendar" class="w-3.5 h-3.5"></i> Faol tadbirlar
+              </div>
+            </div>
+
+            <!-- 4. TOTAL REVENUE -->
+            <div class="glow-card glass-panel p-6 rounded-3xl relative overflow-hidden border border-slate-800/80">
+              <div class="flex items-center justify-between mb-4">
+                <span class="text-xs uppercase font-bold text-slate-400 tracking-wider">Umumiy Daromad</span>
+                <div class="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
+                  <i data-lucide="wallet" class="w-5 h-5"></i>
+                </div>
+              </div>
+              <div id="stat-total-revenue" class="text-3xl font-black text-emerald-400">0 so'm</div>
+              <div class="flex items-center gap-1.5 text-xs text-emerald-400 mt-2 font-medium">
+                <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Tasdiqlangan tushum
+              </div>
+            </div>
+
+          </div>
+
+          <!-- CHARTS SECTION -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- REVENUE & ORDERS CHART (2 COLS) -->
+            <div class="lg:col-span-2 glass-panel p-6 rounded-3xl border border-slate-800/80 shadow-xl flex flex-col justify-between">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <h3 class="text-base font-extrabold text-white">Daromad va Buyurtmalar Dinamikasi</h3>
+                  <p class="text-xs text-slate-400">Haftalik sotuv ko'rsatkichlari grafigi</p>
+                </div>
+                <span class="px-3 py-1 rounded-full bg-slate-800 text-[11px] font-semibold text-slate-300">Oxirgi 7 kun</span>
+              </div>
+              <div class="h-64 sm:h-72 w-full relative">
+                <canvas id="chart-revenue-canvas"></canvas>
+              </div>
+            </div>
+
+            <!-- ROLES DISTRIBUTION (1 COL) -->
+            <div class="glass-panel p-6 rounded-3xl border border-slate-800/80 shadow-xl flex flex-col justify-between">
+              <div class="mb-4">
+                <h3 class="text-base font-extrabold text-white">Rollar Taqsimoti</h3>
+                <p class="text-xs text-slate-400">Tizimdagi akkauntlar kategoriyasi</p>
+              </div>
+              <div class="h-60 w-full relative flex items-center justify-center">
+                <canvas id="chart-roles-canvas"></canvas>
+              </div>
+              <div class="mt-4 pt-4 border-t border-slate-800 flex justify-around text-center text-xs text-slate-400">
+                <div><span class="font-bold text-indigo-400 block" id="badge-cnt-admin">0</span>Admin</div>
+                <div><span class="font-bold text-purple-400 block" id="badge-cnt-org">0</span>Tashkilot</div>
+                <div><span class="font-bold text-emerald-400 block" id="badge-cnt-cust">0</span>Mijoz</div>
+                <div><span class="font-bold text-blue-400 block" id="badge-cnt-ctrl">0</span>Nazorat</div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- SPLIT TABLES (RECENT USERS & ACTIVITIES) -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <!-- RECENT REGISTRATIONS TABLE -->
+            <div class="glass-panel rounded-3xl border border-slate-800/80 overflow-hidden shadow-xl">
+              <div class="p-6 border-b border-slate-800 flex items-center justify-between">
+                <div>
+                  <h3 class="text-base font-extrabold text-white">Yangi Ro'yxatdan O'tganlar</h3>
+                  <p class="text-xs text-slate-400">Oxirgi qo'shilgan foydalanuvchilar</p>
+                </div>
+                <button onclick="navigateToView('users')" class="text-xs text-brand-400 hover:text-brand-300 font-bold hover:underline">
+                  Barchasini ko'rish &rarr;
+                </button>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-slate-900/60 text-slate-400 uppercase tracking-wider text-[10px]">
+                    <tr>
+                      <th class="p-4">Foydalanuvchi</th>
+                      <th class="p-4">Roli</th>
+                      <th class="p-4">Vaqti</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dash-recent-users-tbody" class="divide-y divide-slate-800 text-slate-300">
+                    <!-- Loaded via JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- RECENT AUDIT ACTIVITIES -->
+            <div class="glass-panel rounded-3xl border border-slate-800/80 p-6 shadow-xl">
+              <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
+                <div>
+                  <h3 class="text-base font-extrabold text-white">Oxirgi Faoliyatlar (Audit)</h3>
+                  <p class="text-xs text-slate-400">Xavfsizlik va boshqaruv harakatlari</p>
+                </div>
+                <button onclick="navigateToView('activities')" class="text-xs text-brand-400 hover:text-brand-300 font-bold hover:underline">
+                  To'liq log &rarr;
+                </button>
+              </div>
+              <div id="dash-recent-activities-list" class="space-y-3.5 max-h-80 overflow-y-auto pr-1">
+                <!-- Loaded via JS -->
+              </div>
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <!-- ============================================== -->
+        <!-- VIEW 2: FOYDALANUVCHILAR (USERS MANAGEMENT)   -->
+        <!-- ============================================== -->
+        <section id="panel-users" class="admin-view hidden space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-2xl font-black text-white">Foydalanuvchilar Boshqaruvi</h2>
+              <p class="text-xs text-slate-400">Barcha adminlar, tashkilotchilar, nazoratchilar va mijozlar ro'yxati</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="text" id="users-search-input" oninput="filterUsersTable()" placeholder="Qidiruv (ism, username)..." 
+                class="glass-input rounded-xl px-3.5 py-2 text-xs text-white outline-none w-48 sm:w-64">
+            </div>
+          </div>
+
+          <div class="glass-panel rounded-3xl border border-slate-800/80 overflow-hidden shadow-2xl">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-sm">
+                <thead class="bg-slate-900/80 text-slate-400 uppercase text-xs tracking-wider">
+                  <tr>
+                    <th class="p-4">ID</th>
+                    <th class="p-4">Foydalanuvchi</th>
+                    <th class="p-4">Aloqa (Email / Tel)</th>
+                    <th class="p-4">Roli</th>
+                    <th class="p-4">Tashkilot</th>
+                    <th class="p-4 text-right">Amallar</th>
+                  </tr>
+                </thead>
+                <tbody id="all-users-tbody" class="divide-y divide-slate-800 text-slate-300 text-xs">
+                  <!-- Loaded via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- ============================================== -->
+        <!-- VIEW 3: AUDIT LOGI (ACTIVITY LOGS)             -->
+        <!-- ============================================== -->
+        <section id="panel-activities" class="admin-view hidden space-y-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-2xl font-black text-white">Tizim Faoliyatlari (Audit Log)</h2>
+              <p class="text-xs text-slate-400">Har bir xavfsizlik harakati va admin amallari qat'iy yozib boriladi</p>
+            </div>
+            <button onclick="loadAllActivities()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-white transition flex items-center gap-2">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Yangilash
+            </button>
+          </div>
+
+          <div class="glass-panel rounded-3xl border border-slate-800/80 p-6 shadow-2xl">
+            <div id="full-activities-container" class="space-y-4">
+              <!-- Loaded via JS -->
+            </div>
+          </div>
+        </section>
+
+
+        <!-- ============================================== -->
+        <!-- VIEW 4: ADMIN PROFILE & SECURITY SETTINGS      -->
+        <!-- ============================================== -->
+        <section id="panel-profile" class="admin-view hidden space-y-8">
+          
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-2xl font-black text-white">Admin Profili & Xavfsizlik</h2>
+              <p class="text-xs text-slate-400">Shaxsiy ma'lumotlarni tahrirlash va parolni yangilash</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- PROFILE CARD & AVATAR PICKER (1 COL) -->
+            <div class="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-800/80 shadow-2xl flex flex-col items-center text-center">
+              <div class="relative mb-4">
+                <img id="profile-card-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=admin" class="w-28 h-28 rounded-3xl border-2 border-brand-500 bg-slate-900 shadow-xl" alt="Avatar">
+                <span class="absolute bottom-1 right-1 w-5 h-5 bg-emerald-500 border-2 border-darkBg rounded-full"></span>
+              </div>
+              <h3 id="profile-card-name" class="text-lg font-black text-white">Bosh Administrator</h3>
+              <p id="profile-card-username" class="text-xs text-brand-400 font-mono mt-0.5">@admin</p>
+              <div class="mt-2 inline-flex px-3 py-1 rounded-full bg-brand-500/20 text-brand-300 text-[11px] font-bold border border-brand-500/30">
+                MASTER ADMIN
+              </div>
+
+              <!-- AVATAR PRESET SELECTOR -->
+              <div class="mt-6 pt-6 border-t border-slate-800 w-full text-left">
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2.5">Avatar Tanlash:</label>
+                <div class="grid grid-cols-4 gap-2">
+                  <button type="button" onclick="selectAvatar('admin')" class="p-1 rounded-xl bg-slate-900 hover:border-brand-500 border border-slate-800 transition">
+                    <img src="https://api.dicebear.com/7.x/bottts/svg?seed=admin" class="w-full h-8 rounded-lg" alt="av1">
+                  </button>
+                  <button type="button" onclick="selectAvatar('sobirjon')" class="p-1 rounded-xl bg-slate-900 hover:border-brand-500 border border-slate-800 transition">
+                    <img src="https://api.dicebear.com/7.x/bottts/svg?seed=sobirjon" class="w-full h-8 rounded-lg" alt="av2">
+                  </button>
+                  <button type="button" onclick="selectAvatar('superadmin')" class="p-1 rounded-xl bg-slate-900 hover:border-brand-500 border border-slate-800 transition">
+                    <img src="https://api.dicebear.com/7.x/bottts/svg?seed=superadmin" class="w-full h-8 rounded-lg" alt="av3">
+                  </button>
+                  <button type="button" onclick="selectAvatar('security_pro')" class="p-1 rounded-xl bg-slate-900 hover:border-brand-500 border border-slate-800 transition">
+                    <img src="https://api.dicebear.com/7.x/bottts/svg?seed=security_pro" class="w-full h-8 rounded-lg" alt="av4">
+                  </button>
+                </div>
+              </div>
+
+              <!-- Logout Button -->
+              <div class="mt-8 pt-6 border-t border-slate-800 w-full">
+                <button onclick="handleAdminLogout()" class="w-full py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold text-xs transition border border-red-500/30 flex items-center justify-center gap-2">
+                  <i data-lucide="log-out" class="w-4 h-4"></i>
+                  <span>Tizimdan Chiqish</span>
+                </button>
+              </div>
+
+            </div>
+
+            <!-- PROFILE EDIT FORM & PASSWORD CHANGE (2 COLS) -->
+            <div class="lg:col-span-2 space-y-6">
+              
+              <!-- 1. EDIT PROFILE DETAILS -->
+              <div class="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-800/80 shadow-2xl">
+                <h3 class="text-base font-extrabold text-white mb-1 flex items-center gap-2">
+                  <i data-lucide="user" class="w-4 h-4 text-brand-400"></i> Profil Ma'lumotlarini Tahrirlash
+                </h3>
+                <p class="text-xs text-slate-400 mb-6">Ism, email va aloqa telefon raqamini yangilang</p>
+
+                <form onsubmit="handleUpdateProfile(event)" class="space-y-4">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-xs font-semibold text-slate-300 mb-1">Ism va Familiya</label>
+                      <input type="text" id="prof-name" required class="w-full glass-input rounded-xl px-4 py-2.5 text-sm text-white outline-none">
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-slate-300 mb-1">Username (O'zgarmas)</label>
+                      <input type="text" id="prof-username" disabled class="w-full glass-input rounded-xl px-4 py-2.5 text-sm text-slate-400 bg-slate-900/50 cursor-not-allowed outline-none">
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-xs font-semibold text-slate-300 mb-1">Email Manzili</label>
+                      <input type="email" id="prof-email" required class="w-full glass-input rounded-xl px-4 py-2.5 text-sm text-white outline-none">
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-slate-300 mb-1">Telefon Raqami</label>
+                      <input type="text" id="prof-phone" required class="w-full glass-input rounded-xl px-4 py-2.5 text-sm text-white outline-none">
+                    </div>
+                  </div>
+
+                  <input type="hidden" id="prof-avatar-val">
+
+                  <div class="pt-2">
+                    <button type="submit" class="px-6 py-2.5 bg-brand-600 hover:bg-brand-500 font-bold rounded-xl text-white text-xs shadow-lg shadow-brand-600/30 transition flex items-center gap-2">
+                      <i data-lucide="save" class="w-4 h-4"></i> O'zgarishlarni Saqlash
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              <!-- 2. CHANGE PASSWORD -->
+              <div class="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-800/80 shadow-2xl">
+                <h3 class="text-base font-extrabold text-white mb-1 flex items-center gap-2">
+                  <i data-lucide="lock" class="w-4 h-4 text-purple-400"></i> Parolni O'zgartirish
+                </h3>
+                <p class="text-xs text-slate-400 mb-6">Hisobingiz xavfsizligi uchun parolni vaqti-vaqti bilan yangilab turing</p>
+
+                <form onsubmit="handleChangePassword(event)" class="space-y-4">
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Joriy Parol</label>
+                    <input type="password" id="pass-current" required placeholder="Hozirgi amaldagi parolingiz" 
+                      class="w-full glass-input rounded-xl px-4 py-2.5 text-sm text-white outline-none">
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-xs font-semibold text-slate-300 mb-1">Yangi Parol (Kamida 8 ta)</label>
+                      <input type="password" id="pass-new" required placeholder="Kamida 8 ta belgi" 
+                        class="w-full glass-input rounded-xl px-4 py-2.5 text-sm text-white outline-none">
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-slate-300 mb-1">Yangi Parolni Tasdiqlash</label>
+                      <input type="password" id="pass-confirm" required placeholder="Qayta kiriting" 
+                        class="w-full glass-input rounded-xl px-4 py-2.5 text-sm text-white outline-none">
+                    </div>
+                  </div>
+
+                  <div class="pt-2">
+                    <button type="submit" class="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 font-bold rounded-xl text-white text-xs shadow-lg shadow-purple-600/30 transition flex items-center gap-2">
+                      <i data-lucide="key" class="w-4 h-4"></i> Parolni Yangilash
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+
+      </main>
+
+    </div>
+
+  </div>
+
+  <!-- ADMIN JAVASCRIPT LOGIC -->
+  <script src="/static/admin.js"></script>
+</body>
+</html>

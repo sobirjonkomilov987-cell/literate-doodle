@@ -1,0 +1,139 @@
+/* Custom animations & design enhancements */
+
+/* Perforated ticket styling */
+.ticket-card {
+  position: relative;
+  background: linear-gradient(135deg, #131b2e 0%, #0f172a 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.5rem;
+  overflow: hidden;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ticket-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 25px 30px -5px rgba(99, 102, 241, 0.2);
+}
+
+/* Ticket cutout notches */
+.ticket-cutout-left, .ticket-cutout-right {
+  position: absolute;
+  top: 50%;
+  width: 24px;
+  height: 24px;
+  background-color: #0b0f19;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ticket-cutout-left {
+  left: -12px;
+}
+
+.ticket-cutout-right {
+  right: -12px;
+}
+
+/* Nav button active state */
+.nav-btn {
+  color: #94a3b8;
+}
+
+.nav-btn:hover {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.nav-btn.active {
+  color: #ffffff;
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+}
+
+/* Seat item styling */
+.seat-item {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.seat-available {
+  background-color: rgba(16, 185, 129, 0.15);
+  border: 1.5px solid #10b981;
+  color: #34d399;
+}
+
+.seat-available:hover {
+  background-color: #10b981;
+  color: #000000;
+  transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
+}
+
+.seat-reserved {
+  background-color: rgba(245, 158, 11, 0.2);
+  border: 1.5px dashed #f59e0b;
+  color: #fbbf24;
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+
+.seat-sold {
+  background-color: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #f87171;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.seat-selected {
+  background-color: #6366f1 !important;
+  color: #ffffff !important;
+  border-color: #a5b4fc !important;
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.8) !important;
+  transform: scale(1.12);
+}
+
+/* QR Code container */
+.qr-box {
+  background: white;
+  padding: 8px;
+  border-radius: 12px;
+  display: inline-block;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.qr-box img, .qr-box canvas {
+  display: block;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0b0f19;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
