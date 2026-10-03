@@ -149,17 +149,6 @@
         <p class="text-xs text-slate-400 mt-1.5">Tizimni xavfsiz boshqarish uchun shaxsiy hisobingizga kiring</p>
       </div>
 
-      <!-- Quick Demo Login Hint -->
-      <div class="mb-6 p-3.5 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 flex items-center justify-between text-xs">
-        <div>
-          <span class="text-indigo-300 font-semibold block">👑 Maxfiy Bosh Admin:</span>
-          <span class="text-slate-400 font-mono text-[11px]">sobirjon@admin / sobirjon@</span>
-        </div>
-        <button onclick="fillDemoAdminCredentials()" class="px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[11px] transition shadow">
-          Avto-to'ldirish
-        </button>
-      </div>
-
       <!-- Login Form -->
       <form id="form-admin-login" onsubmit="handleAdminLogin(event)" class="space-y-4">
         <div>
@@ -168,7 +157,7 @@
             <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
               <i data-lucide="user" class="w-4 h-4"></i>
             </span>
-            <input type="text" id="login-identifier" required placeholder="sobirjon@admin" 
+            <input type="text" id="login-identifier" required placeholder="Admin login yoki email" 
               class="w-full glass-input rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-slate-500 outline-none">
           </div>
         </div>

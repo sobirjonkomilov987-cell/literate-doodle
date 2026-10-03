@@ -233,13 +233,6 @@ function updateAdminUIProfile(admin) {
 }
 
 // ================= AUTHENTICATION ACTIONS =================
-function fillDemoAdminCredentials() {
-  const loginInp = document.getElementById("login-identifier");
-  const passInp = document.getElementById("login-password");
-  if (loginInp) loginInp.value = "sobirjon@admin";
-  if (passInp) passInp.value = "sobirjon@";
-  showToast("Maxfiy Bosh Admin ma'lumotlari kiritildi!", "info");
-}
 
 function togglePasswordVisibility(inputId, iconId) {
   const input = document.getElementById(inputId);
