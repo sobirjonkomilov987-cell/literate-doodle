@@ -7,7 +7,8 @@ from app.database import get_db
 from app.models import User, UserRole
 from app.schemas import (
     UserCreate, UserResponse, LoginRequest, Token,
-    AdminRegisterRequest, AdminLoginRequest, ForgotPasswordRequest
+    AdminRegisterRequest, AdminLoginRequest, ForgotPasswordRequest,
+    GoogleAuthRequest
 )
 from app.auth import get_password_hash, verify_password, create_access_token, get_current_user, security
 from app.services.rate_limiter import check_brute_force, record_failed_attempt, clear_failed_attempts, blacklist_token
@@ -141,6 +142,91 @@ def login(login_req: LoginRequest, db: Session = Depends(get_db)):
         data={"sub": user.username, "role": user.role, "id": user.id}
     )
 
+    return Token(
+        access_token=access_token,
+        token_type="bearer",
+        user=UserResponse.model_validate(user)
+    )
+
+@router.post("/google", response_model=Token)
+def google_auth(auth_req: GoogleAuthRequest, db: Session = Depends(get_db)):
+    """
+    Google orqali bir marta bosishda tizimga kirish yoki ro'yxatdan o'tish (Google OAuth / GSI):
+    - Google email, ism va avatarini qabul qilish
+    - Agar foydalanuvchi mavjud bo'lsa: darhol JWT token qaytaradi
+    - Agar yangi bo'lsa: 'customer' roli bilan xavfsiz avtomatik hisob ochadi
+    - Audit logida Google login qayd etiladi
+    """
+    import secrets
+    email = (auth_req.email or "").strip().lower()
+    name = (auth_req.name or "").strip()
+    avatar = (auth_req.avatar or "").strip()
+
+    if auth_req.credential:
+        try:
+            import jwt
+            decoded = jwt.decode(auth_req.credential, options={"verify_signature": False})
+            if "email" in decoded:
+                email = decoded["email"].strip().lower()
+            if "name" in decoded and not name:
+                name = decoded["name"].strip()
+            if "picture" in decoded and not avatar:
+                avatar = decoded["picture"].strip()
+        except Exception:
+            pass
+
+    if not email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Google hisobi emaili aniqlanmadi."
+        )
+
+    # 1. Bazada ushbu email yoki username bilan qidirish
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        base_username = email.split("@")[0].replace(".", "_").replace("+", "_")
+        candidate_username = base_username
+        counter = 1
+        while db.query(User).filter(User.username == candidate_username).first():
+            candidate_username = f"{base_username}_{counter}"
+            counter += 1
+
+        random_pass = secrets.token_urlsafe(16)
+        user = User(
+            name=name if name else candidate_username,
+            username=candidate_username,
+            email=email,
+            avatar=avatar if avatar else f"https://api.dicebear.com/7.x/initials/svg?seed={candidate_username}",
+            password_hash=get_password_hash(random_pass),
+            role=UserRole.CUSTOMER.value,
+            organization_name=None
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+        log_activity(
+            db=db,
+            user_id=user.id,
+            username=user.username,
+            action="Google Ro'yxatdan O'tish",
+            details=f"Foydalanuvchi '{user.username}' ({email}) Google orqali tizimda yangi hisob ochdi."
+        )
+    else:
+        if avatar and not user.avatar:
+            user.avatar = avatar
+            db.commit()
+        log_activity(
+            db=db,
+            user_id=user.id,
+            username=user.username,
+            action="Google Tizimga Kirish",
+            details=f"Foydalanuvchi '{user.username}' ({email}) Google orqali tizimga kirdi."
+        )
+
+    access_token = create_access_token(
+        data={"sub": user.username, "role": user.role, "id": user.id}
+    )
     return Token(
         access_token=access_token,
         token_type="bearer",

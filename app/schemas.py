@@ -27,6 +27,12 @@ class ControllerCreate(BaseModel):
 class UserPasswordReset(BaseModel):
     new_password: str
 
+class GoogleAuthRequest(BaseModel):
+    credential: Optional[str] = None
+    email: Optional[str] = None
+    name: Optional[str] = None
+    avatar: Optional[str] = None
+
 class AdminRegisterRequest(BaseModel):
     name: str = Field(..., min_length=2, max_length=150, description="Ism va familiya")
     username: str = Field(..., min_length=3, max_length=50, description="Username")

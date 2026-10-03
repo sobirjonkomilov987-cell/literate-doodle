@@ -621,25 +621,28 @@
   <!-- ==================== MODALS ==================== -->
 
   <!-- 1. AUTH MODAL (LOGIN / REGISTER) -->
-  <div id="auth-modal" class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="glass-panel border border-slate-700/60 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative">
-      <button onclick="closeAuthModal()" class="absolute top-5 right-5 text-slate-400 hover:text-white transition">
-        <i data-lucide="x" class="w-6 h-6"></i>
-      </button>
-
-      <!-- TOP MODE SWITCHER TABS -->
-      <div class="flex rounded-2xl bg-slate-900/90 p-1.5 mb-6 border border-slate-800/80">
-        <button type="button" id="auth-tab-login" onclick="switchAuthTab('login')" class="flex-1 py-2.5 rounded-xl font-bold text-sm transition bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2">
-          <i data-lucide="log-in" class="w-4 h-4"></i> Kirish
-        </button>
-        <button type="button" id="auth-tab-register" onclick="switchAuthTab('register')" class="flex-1 py-2.5 rounded-xl font-bold text-sm transition text-slate-400 hover:text-white flex items-center justify-center gap-2">
-          <i data-lucide="user-plus" class="w-4 h-4"></i> Ro'yxatdan O'tish
+  <div id="auth-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="glass-panel border border-slate-700/60 rounded-3xl max-w-md w-full p-5 sm:p-7 shadow-2xl relative my-auto max-h-[92vh] overflow-y-auto">
+      
+      <!-- TOP HEADER WITH TITLE & CLOSE BUTTON -->
+      <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-800/80">
+        <div>
+          <h3 id="auth-modal-title" class="text-xl sm:text-2xl font-extrabold text-white">Tizimga Kirish</h3>
+          <p id="auth-modal-subtitle" class="text-xs text-slate-400 mt-0.5">Shaxsiy hisobingizga kiring</p>
+        </div>
+        <button onclick="closeAuthModal()" class="w-9 h-9 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition cursor-pointer flex-shrink-0" aria-label="Yopish">
+          <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
 
-      <div class="text-center mb-5">
-        <h3 id="auth-modal-title" class="text-2xl font-extrabold text-white">Tizimga Kirish</h3>
-        <p id="auth-modal-subtitle" class="text-xs text-slate-400 mt-1">Shaxsiy hisobingizga kiring</p>
+      <!-- TOP MODE SWITCHER TABS -->
+      <div class="flex rounded-2xl bg-slate-900/90 p-1.5 mb-5 border border-slate-800/80">
+        <button type="button" id="auth-tab-login" onclick="switchAuthTab('login')" class="flex-1 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 cursor-pointer">
+          <i data-lucide="log-in" class="w-4 h-4"></i> Kirish
+        </button>
+        <button type="button" id="auth-tab-register" onclick="switchAuthTab('register')" class="flex-1 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition text-slate-400 hover:text-white flex items-center justify-center gap-2 cursor-pointer">
+          <i data-lucide="user-plus" class="w-4 h-4"></i> Ro'yxatdan O'tish
+        </button>
       </div>
 
       <form onsubmit="handleAuthSubmit(event)" class="space-y-3.5">
@@ -768,77 +771,155 @@
           <div id="auth-match-feedback" class="hidden text-[11px] mt-1.5 flex items-center gap-1.5 font-medium"></div>
         </div>
 
-        <button id="auth-submit-btn" type="submit" class="btn-premium-gradient w-full py-3.5 rounded-xl font-bold text-white text-sm shadow-lg flex items-center justify-center gap-2 mt-2">
+        <button id="auth-submit-btn" type="submit" class="btn-premium-gradient w-full py-3.5 rounded-xl font-bold text-white text-sm shadow-lg flex items-center justify-center gap-2 mt-2 cursor-pointer">
           <i id="auth-submit-icon" class="fa-solid fa-right-to-bracket"></i>
           <span id="auth-submit-text">Kirish</span>
         </button>
+
+        <!-- GOOGLE SIGN-IN DIVIDER & BUTTON -->
+        <div class="pt-2">
+          <div class="relative flex py-2 items-center">
+            <div class="flex-grow border-t border-slate-700/80"></div>
+            <span class="flex-shrink mx-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Yoki</span>
+            <div class="flex-grow border-t border-slate-700/80"></div>
+          </div>
+
+          <button type="button" onclick="handleGoogleSignIn()" class="w-full py-3 px-4 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-bold text-xs sm:text-sm transition-all duration-200 shadow-md active:scale-[0.98] flex items-center justify-center gap-2.5 cursor-pointer">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+            <span id="google-btn-text">Google orqali davom etish</span>
+          </button>
+        </div>
       </form>
     </div>
   </div>
 
-  <!-- 2. SEAT MAP & RESERVATION MODAL -->
-  <div id="seat-map-modal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
-    <div class="bg-cardBg border border-slate-700 rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl relative overflow-hidden">
-      
-      <!-- MODAL HEADER -->
-      <div class="p-6 border-b border-borderGlass flex items-center justify-between">
-        <div>
-          <h3 id="seat-modal-event-title" class="text-xl font-bold text-white">Tadbir Nomi</h3>
-          <p id="seat-modal-event-sub" class="text-xs text-slate-400">Joy tanlang va 10 daqiqaga band qiling</p>
+  <!-- GOOGLE ACCOUNT PROMPT MODAL (One-Click Google Authentication) -->
+  <div id="google-prompt-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-sm w-full p-6 shadow-2xl relative">
+      <button onclick="closeGooglePromptModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1 cursor-pointer">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="text-center mb-5">
+        <div class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center mx-auto mb-3 shadow-md">
+          <svg class="w-6 h-6" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
         </div>
-        <button onclick="closeSeatMapModal()" class="text-slate-400 hover:text-white p-2">
-          <i data-lucide="x" class="w-6 h-6"></i>
+        <h4 class="text-lg font-bold text-white">Google hisobingizni tanlang</h4>
+        <p class="text-xs text-slate-400 mt-1">TadbirChipta tizimiga kirish</p>
+      </div>
+
+      <!-- GOOGLE ACCOUNT QUICK PICKER -->
+      <div class="space-y-2 mb-4">
+        <button onclick="executeGoogleAuth('Sobirjon Komilov', 'sobirjon.komilov@gmail.com')" class="w-full p-3 rounded-2xl bg-slate-800/80 hover:bg-indigo-600/20 border border-slate-700 hover:border-indigo-500/50 flex items-center gap-3 transition text-left cursor-pointer">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 text-white font-bold flex items-center justify-center flex-shrink-0 shadow-md">
+            SK
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-bold text-white truncate">Sobirjon Komilov</div>
+            <div class="text-xs text-slate-400 truncate">sobirjon.komilov@gmail.com</div>
+          </div>
+          <i data-lucide="chevron-right" class="w-4 h-4 text-slate-500"></i>
+        </button>
+
+        <!-- CUSTOM GOOGLE EMAIL INPUT -->
+        <div class="pt-2">
+          <label class="block text-[11px] font-semibold text-slate-400 mb-1">Boshqa Google hisob bilan:</label>
+          <div class="flex gap-2">
+            <input id="custom-google-email" type="email" placeholder="example@gmail.com" 
+              class="w-full glass-input rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500">
+            <button onclick="handleCustomGoogleAuthSubmit()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition flex-shrink-0 cursor-pointer">
+              Kirish
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center pt-2 border-t border-slate-800">
+        <span class="text-[10px] text-slate-500">Xavfsiz Google OAuth 2.0 protokoli</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. SEAT MAP & RESERVATION MODAL -->
+  <div id="seat-map-modal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+    <div class="bg-cardBg border border-slate-700/80 rounded-2xl sm:rounded-3xl max-w-4xl w-full h-[94vh] sm:h-auto sm:max-h-[90vh] flex flex-col shadow-2xl relative overflow-hidden my-auto">
+      
+      <!-- MODAL HEADER (Responsive for Mobile) -->
+      <div class="p-4 sm:p-5 border-b border-borderGlass flex items-center justify-between bg-slate-900/70 flex-shrink-0">
+        <div class="min-w-0 pr-3">
+          <h3 id="seat-modal-event-title" class="text-base sm:text-xl font-extrabold text-white truncate">Tadbir Nomi</h3>
+          <p id="seat-modal-event-sub" class="text-[11px] sm:text-xs text-slate-400 truncate">Joyni tanlang va 10 daqiqaga qulflang</p>
+        </div>
+        <button onclick="closeSeatMapModal()" class="w-9 h-9 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition flex-shrink-0 cursor-pointer" aria-label="Yopish">
+          <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
 
-      <!-- SECTOR PILLS & LEGEND -->
-      <div class="px-6 py-3 bg-slate-900/60 border-b border-borderGlass flex flex-wrap items-center justify-between gap-4">
-        <!-- SECTOR SELECTOR TABS -->
-        <div id="seat-sector-tabs" class="flex flex-wrap gap-2">
-          <!-- Rendered via JS -->
+      <!-- SECTOR PILLS (Horizontally Scrollable on Mobile) -->
+      <div class="px-4 py-2.5 bg-slate-950/80 border-b border-borderGlass flex flex-col gap-2 flex-shrink-0">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Sektorlar:</span>
+          <!-- SEAT LEGEND (Compact Responsive Pills) -->
+          <div class="flex items-center gap-2.5 sm:gap-4 text-[10px] sm:text-xs">
+            <div class="flex items-center gap-1 font-semibold text-emerald-400">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-emerald-500/30"></span> Bo'sh
+            </div>
+            <div class="flex items-center gap-1 font-semibold text-amber-400">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Band
+            </div>
+            <div class="flex items-center gap-1 font-semibold text-slate-400">
+              <span class="w-2.5 h-2.5 rounded-full bg-slate-600"></span> Sotilgan
+            </div>
+            <div class="flex items-center gap-1 font-semibold text-indigo-400">
+              <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 ring-2 ring-indigo-400"></span> Tanlangan
+            </div>
+          </div>
         </div>
 
-        <!-- SEAT LEGEND -->
-        <div class="flex items-center gap-4 text-xs">
-          <div class="flex items-center gap-1.5">
-            <span class="w-3.5 h-3.5 rounded-full bg-emerald-500"></span> Bo'sh
-          </div>
-          <div class="flex items-center gap-1.5">
-            <span class="w-3.5 h-3.5 rounded-full bg-amber-500"></span> Rezervda (10 min)
-          </div>
-          <div class="flex items-center gap-1.5">
-            <span class="w-3.5 h-3.5 rounded-full bg-red-500"></span> Sotilgan
-          </div>
-          <div class="flex items-center gap-1.5">
-            <span class="w-3.5 h-3.5 rounded-full bg-indigo-500 ring-2 ring-indigo-400"></span> Tanlangan
-          </div>
+        <div id="seat-sector-tabs" class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+          <!-- Rendered via JS -->
         </div>
       </div>
 
-      <!-- 2D SEAT MAP GRID VIEWPORT -->
-      <div class="flex-1 overflow-y-auto p-6 sm:p-8 flex flex-col items-center">
-        <!-- VISUAL STAGE / SCREEN -->
-        <div class="w-full max-w-xl mb-10 text-center">
-          <div class="h-3 w-full bg-gradient-to-r from-indigo-500/20 via-indigo-500 to-indigo-500/20 rounded-full shadow-[0_0_25px_rgba(99,102,241,0.8)] mb-2"></div>
-          <span class="text-[11px] font-bold uppercase tracking-[0.3em] text-indigo-300/80">SAHNA / EKRAN</span>
+      <!-- 2D SEAT MAP GRID VIEWPORT (Pinch & Touch Friendly) -->
+      <div class="flex-1 overflow-y-auto overflow-x-auto p-4 sm:p-6 flex flex-col items-center bg-darkBg/50 relative">
+        <!-- 3D THEATER STAGE / SCREEN -->
+        <div class="w-full max-w-md my-2 sm:my-4 flex flex-col items-center">
+          <div class="cinema-stage-arc"></div>
+          <span class="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-[0.3em] text-indigo-300/90 -mt-2">SAHNA / EKRAN</span>
         </div>
 
-        <!-- SEATS GRID -->
-        <div id="seats-grid-container" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 max-w-2xl w-full justify-center">
+        <!-- SEATS GRID (Comfortable spacing & high visibility) -->
+        <div id="seats-grid-container" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2.5 sm:gap-3.5 max-w-2xl w-full justify-center py-4 px-2">
           <!-- Dynamic seats rendered via JS -->
         </div>
       </div>
 
-      <!-- MODAL FOOTER / ACTIVE SEAT SUMMARY -->
-      <div class="p-6 border-t border-borderGlass bg-slate-900/80 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div>
-          <div class="text-xs text-slate-400">Tanlangan joy:</div>
-          <div id="selected-seat-desc" class="text-base font-bold text-white">Hech qaysi joy tanlanmagan</div>
-          <div id="selected-seat-price" class="text-xs font-semibold text-emerald-400">0 so'm</div>
+      <!-- MODAL FOOTER / ACTIVE SEAT SUMMARY (Mobile-first Bottom Bar) -->
+      <div class="p-3.5 sm:p-5 border-t border-borderGlass bg-slate-900/95 flex flex-col sm:flex-row items-center justify-between gap-3 flex-shrink-0">
+        <div class="flex items-center gap-3 w-full sm:w-auto">
+          <div class="w-10 h-10 rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center flex-shrink-0 border border-indigo-500/30">
+            <i class="fa-solid fa-couch text-sm"></i>
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Tanlangan joy:</div>
+            <div id="selected-seat-desc" class="text-sm sm:text-base font-extrabold text-white truncate">Hech qaysi joy tanlanmagan</div>
+            <div id="selected-seat-price" class="text-xs font-bold text-emerald-400">0 so'm</div>
+          </div>
         </div>
 
-        <button id="reserve-seat-btn" disabled onclick="handleReserveSeatClick()" class="w-full sm:w-auto px-7 py-3.5 rounded-xl btn-premium-gradient disabled:opacity-40 disabled:cursor-not-allowed font-bold text-sm text-white shadow-lg transition flex items-center justify-center gap-2">
-          <i class="fa-solid fa-lock"></i> <span>10 Daqiqaga Band Qilish</span>
+        <button id="reserve-seat-btn" disabled onclick="handleReserveSeatClick()" class="w-full sm:w-auto px-6 py-3 rounded-xl btn-premium-gradient disabled:opacity-40 disabled:cursor-not-allowed font-bold text-xs sm:text-sm text-white shadow-lg transition flex items-center justify-center gap-2 cursor-pointer">
+          <i class="fa-solid fa-bolt"></i> <span>10 Daqiqaga Band Qilish</span>
         </button>
       </div>
 

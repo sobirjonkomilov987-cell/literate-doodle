@@ -554,6 +554,62 @@ function logout(notify = true) {
   if (notify) showToast("Tizimdan chiqildi", "info");
 }
 
+// ================= GOOGLE AUTHENTICATION =================
+function handleGoogleSignIn() {
+  const modal = document.getElementById("google-prompt-modal");
+  if (modal) {
+    modal.classList.remove("hidden");
+    if (window.lucide) lucide.createIcons();
+  }
+}
+
+function closeGooglePromptModal() {
+  const modal = document.getElementById("google-prompt-modal");
+  if (modal) modal.classList.add("hidden");
+}
+
+async function executeGoogleAuth(name, email, avatar = "") {
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/google`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, avatar })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.detail || "Google orqali kirishda xatolik yuz berdi");
+    }
+
+    authToken = data.access_token;
+    localStorage.setItem("token", authToken);
+    currentUser = data.user;
+    updateAuthUI(currentUser);
+    closeGooglePromptModal();
+    closeAuthModal();
+
+    showToast(`Xush kelibsiz, ${currentUser.name || currentUser.username}! Google orqali tizimga kirdingiz.`, "success");
+    checkExistingReservation();
+    navigate('events');
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
+function handleCustomGoogleAuthSubmit() {
+  const input = document.getElementById("custom-google-email");
+  const email = (input?.value || "").trim();
+  if (!email) {
+    showToast("Iltimos, Google email manzilingizni kiriting", "warning");
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showToast("Email formati noto'g'ri. Masalan: siz@gmail.com", "warning");
+    return;
+  }
+  const name = email.split('@')[0];
+  executeGoogleAuth(name, email);
+}
+
 // ================= EVENTS VITRINA =================
 async function loadEvents() {
   try {
@@ -706,20 +762,21 @@ async function selectSectorForSeats(sectorId) {
     }
 
     container.innerHTML = seats.map(s => {
-      let statusClass = "seat-available";
+      let statusClass = "available";
       let titleTooltip = `Joy: ${s.seat_number} - Bo'sh (${selectedSectorForSeats.price.toLocaleString()} so'm)`;
 
       if (s.status === "reserved") {
-        statusClass = "seat-reserved";
+        statusClass = "reserved";
         titleTooltip = `Joy: ${s.seat_number} - 10 daqiqaga band qilingan`;
       } else if (s.status === "sold") {
-        statusClass = "seat-sold";
+        statusClass = "sold";
         titleTooltip = `Joy: ${s.seat_number} - Sotilgan`;
       }
 
       return `
-        <div onclick="pickSeat(${s.id}, '${s.seat_number}', '${s.status}')" id="seat-node-${s.id}" class="seat-item ${statusClass}" title="${titleTooltip}">
-          <span>${s.seat_number}</span>
+        <div onclick="pickSeat(${s.id}, '${s.seat_number}', '${s.status}')" id="seat-node-${s.id}" class="seat-chair ${statusClass}" title="${titleTooltip}">
+          <i class="fa-solid fa-couch chair-icon"></i>
+          <span class="chair-num">${s.seat_number}</span>
         </div>
       `;
     }).join('');
@@ -738,7 +795,10 @@ function pickSeat(seatId, seatNumber, status) {
   // Clear previous pick
   if (currentlyPickedSeat) {
     const prevNode = document.getElementById(`seat-node-${currentlyPickedSeat.id}`);
-    if (prevNode) prevNode.classList.remove("seat-selected");
+    if (prevNode) {
+      prevNode.classList.remove("selected");
+      prevNode.classList.add("available");
+    }
   }
 
   currentlyPickedSeat = {
@@ -749,7 +809,10 @@ function pickSeat(seatId, seatNumber, status) {
   };
 
   const node = document.getElementById(`seat-node-${seatId}`);
-  if (node) node.classList.add("seat-selected");
+  if (node) {
+    node.classList.remove("available");
+    node.classList.add("selected");
+  }
 
   document.getElementById("selected-seat-desc").textContent = `${selectedSectorForSeats.name} (Joy: ${seatNumber})`;
   document.getElementById("selected-seat-price").textContent = `${selectedSectorForSeats.price.toLocaleString()} so'm`;

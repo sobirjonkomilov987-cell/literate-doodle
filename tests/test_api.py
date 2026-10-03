@@ -517,3 +517,30 @@ def test_customer_registration_full_flow():
     token_data = login_resp.json()
     assert "access_token" in token_data
     assert token_data["user"]["role"] == "customer"
+
+def test_google_auth_flow():
+    """Google orqali avtorizatsiya va ro'yxatdan o'tishni to'liq tekshirish"""
+    # 1. Bo'sh email bilan xatolik
+    res_empty = client.post("/api/auth/google", json={"email": ""})
+    assert res_empty.status_code == 400
+
+    # 2. Yangi Google foydalanuvchisi kirishi (Sign up & login)
+    google_payload = {
+        "name": "Sobirjon Google User",
+        "email": "sobirjon.tester@gmail.com",
+        "avatar": "https://lh3.googleusercontent.com/a/sample_avatar"
+    }
+    res_google = client.post("/api/auth/google", json=google_payload)
+    assert res_google.status_code == 200
+    g_data = res_google.json()
+    assert "access_token" in g_data
+    assert g_data["user"]["email"] == "sobirjon.tester@gmail.com"
+    assert g_data["user"]["role"] == "customer"
+
+    # 3. Mavjud Google foydalanuvchisi qayta kirishi (Sign in)
+    res_google_again = client.post("/api/auth/google", json=google_payload)
+    assert res_google_again.status_code == 200
+    g_data_again = res_google_again.json()
+    assert "access_token" in g_data_again
+    assert g_data_again["user"]["id"] == g_data["user"]["id"]
+
