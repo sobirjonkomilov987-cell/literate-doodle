@@ -1,5 +1,7 @@
 # 🎟️ Tadbir Chiptalari API & Vebsayt Tizimi (Event Ticket System)
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/sobirjonkomilov987-cell/literate-doodle)
+
 Ushbu loyiha **Python FastAPI** va **PostgreSQL** (yoki SQLite) yordamida yaratilgan bo'lib, tadbirlar uchun chiptalarni onlayn sotish, 10 daqiqalik xavfsiz joy rezervatsiyasi (concurrency / race condition himoyasi), idempotent to'lovlar, QR kodli chiptalar va kirish nazorati (Controller) tizimini o'z ichiga oladi.
 
 Loyiha nafaqat kuchli **REST API** backend qismiga, balki zamonaviy va chiroyli **Interaktiv Vebsayt (Frontend)** qismiga ham ega!
